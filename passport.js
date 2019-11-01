@@ -26,7 +26,7 @@ module.exports = function(passport) {
       console.log(loginQuery);
       try {
         pool.query(loginQuery, (err, results) => {
-          if (results) {
+          if (results.rows[0] != undefined) {
             return done(null, [
               {
                 username: results.rows[0].username,

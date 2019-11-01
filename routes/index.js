@@ -14,7 +14,6 @@ router.use("/", express.static("javascripts"));
 router.use("/", express.static("stylesheets"));
 
 var loggedIn = function(req, res, next) {
-  console.log(req.isAuthenticated());
   if (req.isAuthenticated()) {
     next();
   } else {
@@ -22,16 +21,24 @@ var loggedIn = function(req, res, next) {
   }
 };
 
+var loggedOut = function(req, res, next) {
+  if (!req.isAuthenticated()) {
+    next();
+  } else {
+    res.redirect("/home");
+  }
+};
+
 /* GET home page. */
-router.get("/", function(req, res, next) {
-  res.render("index", { title: "Express" });
+router.get("/", loggedOut, function(req, res, next) {
+  res.redirect("/login");
 });
 
-router.get("/login", function(req, res, next) {
+router.get("/login", loggedOut, function(req, res, next) {
   res.render("login");
 });
 
-router.get("/signup", function(req, res, next) {
+router.get("/signup", loggedOut, function(req, res, next) {
   res.render("signup");
 });
 
@@ -39,14 +46,14 @@ router.get("/home", loggedIn, function(req, res, next) {
   res.render("home");
 });
 
-router.get("/logout", function(req, res, next) {
+router.get("/logout", loggedIn, function(req, res, next) {
   req.logOut();
-  req.redirect("/login");
+  res.redirect("/login");
 });
 
 //Imported from old code part a
 
-router.post("/project-signup", (req, res, next) => {
+router.post("/project-signup", loggedIn, (req, res, next) => {
   var projTitle = req.body.projectTitle;
   var projDesc = req.body.projectDesc;
   var projTargetAmt = req.body.projectTargetAmt;
@@ -77,23 +84,13 @@ router.post("/project-signup", (req, res, next) => {
   });
 });
 
-// project exists error page
-router.get("/error/projectexists", (res, req) => {
-  res.render("project-exists");
-});
-
-router.get("/user-signup", function(req, res, next) {
-  res.render("user-signup");
-});
-router.get("/", (request, response) => response.render("home"));
-
 // user pages
-router.get("/users", async (req, res) => {
+router.get("/users", loggedIn, async (req, res) => {
   const rows = await readUsers();
   res.render("users", { data: rows });
 });
 
-router.get("/profile/:username", async (req, res) => {
+router.get("/profile/:username", loggedIn, async (req, res) => {
   const row = await getUserInfo(req.params.username);
   // await getUserInfo(req.params.username);
   res.render("profile", { data: row });
@@ -120,9 +117,11 @@ async function getUserInfo(username) {
 }
 
 //project pages
-router.get("/project/new", (req, res) => res.render("project-signup"));
+router.get("/project/new", loggedIn, (req, res) =>
+  res.render("project-signup")
+);
 
-router.get("/projects", async (req, res) => {
+router.get("/projects", loggedIn, async (req, res) => {
   const rows = await readProjects();
   res.render("projects", { data: rows });
   // var queryString = "Select * from projects";
@@ -136,7 +135,7 @@ router.get("/projects", async (req, res) => {
   // });
 });
 
-router.get("/project/:projtitle", async (req, res) => {
+router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const row = await getProjectInfo(req.params.projtitle);
   res.render("project-detail", { data: row });
 });
