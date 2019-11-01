@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+  </head>
+
+  <body>
+    <% include partials/base.ejs %>
+
+	<div class="container-fluid">
+		<div class="row">
+			
+			<div style="float:left; width:400px; height:100%;"></div>
+
+			<!--Content-->
+			<div class="col offset-0" style="margin-top:80px;">
+				<div class="container-fluid">
+					<h1>List of projects</h1>
+					<br><br>
+					<ol>
+						<% data.forEach((item) => { %>
+							<li><a href="/project/<%=item.projtitle%>"><%=item.projtitle %></a></li>
+							<!-- <br>
+							<p><%= item.joineddate %></p> -->
+						<% }); %>
+					</ol>
+				</div>
+			</div>
+
+			<div style="float:right; width:400px; height:100%;"></div>
+		</div>
+  </body>
+</html>
+

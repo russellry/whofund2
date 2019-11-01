@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>WhoFund</title>
+	<meta charset="utf-8" />
+	<!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+	
+	<!-- FontAwesome CSS-->
+	<script src="https://use.fontawesome.com/5a6689ed05.js"></script>
+		
+	<meta name="viewport" content = "width=device-width, initial-scale=1.0">
+	<style type="text/css">
+		html,
+		body {
+		  height:100%
+		}
+	</style>
+</head>
+
+<body class="body" style="background-color:#f6f6f6">
+	<% include partials/base.ejs %>
+
+	<div class="container-fluid">
+		<div class="row">
+			
+			<div style="float:left; width:500px; height:100%;"></div>
+
+			<!--Content-->
+			<div class="col offset-0" style="margin-top:80px;">
+				<div class="container-fluid">
+					<br><br>
+					<h1>Welcome to <%=data[0].username%>'s profile!</h1>
+					<p>Join date: <%=data[0].joineddate%></p>
+					
+				</div>
+			</div>
+
+			<div style="float:right; width:400px; height:100%;"></div>
+		</div>
+	</div>
+	
+	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+	<script src="{% static 'homepage/js/bootstrap.min.js' %}"></script>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.4.0/marked.min.js"	></script>
+
+	<!-- FontAwesome SVG JS -->
+
+</body>
+
+</html>
