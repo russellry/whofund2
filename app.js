@@ -11,7 +11,8 @@ require("./passport")(passport);
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
+  // connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
+  connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
 });
 
 var indexRouter = require("./routes/index");
@@ -56,7 +57,7 @@ app.use(function(err, req, res, next) {
   res.locals.error = req.app.get("env") === "development" ? err : {};
 
   // render the error page
-  res.status(err.status || 500);  
+  res.status(err.status || 500);
   res.render("error");
 });
 
