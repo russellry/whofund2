@@ -51,38 +51,6 @@ router.get("/logout", loggedIn, function(req, res, next) {
   res.redirect("/login");
 });
 
-//Imported from old code part a
-
-router.post("/project-signup", loggedIn, (req, res, next) => {
-  var projTitle = req.body.projectTitle;
-  var projDesc = req.body.projectDesc;
-  var projTargetAmt = req.body.projectTargetAmt;
-  var projDeadline = req.body.projectDeadline;
-  var queryString =
-    "INSERT INTO projects (projtitle, datecreated, description, targetamount, deadline) VALUES(";
-  var projDateCreated = api.getDateNow();
-  queryString +=
-    "'" +
-    projTitle +
-    "', '" +
-    projDateCreated +
-    "', '" +
-    projDesc +
-    "', '" +
-    projTargetAmt +
-    "', '" +
-    projDeadline +
-    "')";
-  pool.query(queryString, err => {
-    if (err) {
-      res.redirect("/error/projectexists");
-    } else {
-      console.log("new project created");
-      res.redirect(`/projects`);
-    }
-    res.end();
-  });
-});
 
 // get all users
 router.get("/users", loggedIn, async (req, res) => {
@@ -307,6 +275,87 @@ router.get("/project/:projtitle/unlike", loggedIn, async (req,res) => {
   res.render("likeResult", {projInfo: projInfo, currentuser: req.user[0].username, msg: msg})
 })
 
+// create new project
+
+router.post("/project-signup", loggedIn, async (req, res, next) => {
+  var projTitle = req.body.projectTitle;
+  var projDesc = req.body.projectDesc;
+  var projTargetAmt = req.body.projectTargetAmt;
+  var projDeadline = req.body.projectDeadline;
+  const projTitleExists = await checkProjTitle();
+  if(projTitleExists) {
+    res.redirect("/error/projectexists");
+  }
+  var queryString =
+    "INSERT INTO projects (projtitle, datecreated, description, targetamount, deadline) VALUES(";
+  var projDateCreated = api.getDateNow();
+  queryString +=
+    "'" +
+    projTitle +
+    "', '" +
+    projDateCreated +
+    "', '" +
+    projDesc +
+    "', '" +
+    projTargetAmt +
+    "', '" +
+    projDeadline +
+    "')";
+  try {
+    pool.query(queryString);
+  } catch (e) {
+
+  }
+  
+  var tierOneAmount = req.body.tierOneAmount;
+  var tierOneRewards = req.body.tierOneRewards;
+  var tierTwoAmount = req.body.tierTwoAmount;
+  var tierTwoRewards = req.body.tierTwoRewards;
+  var tierThreeAmount = req.body.tierThreeAmount;
+  var tierThreeRewards = req.body.tierThreeRewards;
+
+  var queryString2 = "INSERT INTO projectbundles(projtitle, tier, amount, description) VALUES($1, $2, $3, $4)";
+  await pool.query(queryString2, [projTitle, 1, tierOneAmount, tierOneRewards], err => {
+    if (err) {
+      console.log("tier one problem");
+    } else {
+      console.log("tier one ok");
+    }
+  });
+
+  await pool.query(queryString2, [projTitle, 2, tierTwoAmount, tierTwoRewards], err => {
+    if (err) {
+      console.log("tier two problem");
+    } else {
+      console.log("tier two ok");
+    }
+  });
+
+  await pool.query(queryString2, [projTitle, 3, tierThreeAmount, tierThreeRewards], err => {
+    if (err) {
+      console.log("tier three problem");
+    } else {
+      console.log("tier three ok");
+    }
+  });
+  // try {
+  //   pool.query(queryString, [projTitle, 1, tierOneAmount, tierOneRewards]);
+  // } catch(e) {
+  // }
+
+  // try {
+  //   pool.query(queryString, [projTitle, 3, tierTwoAmount, tierTwoRewards]);
+  // } catch(e) {
+  // }
+
+  // try {
+  //   pool.query(queryString, [projTitle, 3, tierThreeAmount, tierThreeRewards]);
+  // } catch(e) {
+  // }
+  
+  res.redirect("/projects");
+});
+
 // project page functions
 async function readProjects() {
   try {
@@ -314,6 +363,17 @@ async function readProjects() {
     return results.rows;
   } catch (e) {
     return [];
+  }
+}
+
+async function checkProjTitle(projTitle) {
+  try {
+    var queryString = "select * from projects where projtitle = '" + projTitle + "'";
+    const results = await pool.query(queryString);
+    if(results == undefined) return false;
+    return results.rows[0].projtitle = projTitle;
+  } catch (e) {
+    return false;
   }
 }
 
@@ -369,6 +429,8 @@ async function checkIfUserLikesProject(username, projTitle) {
   } catch(e) {
   }
 }
+
+
 
 //End import part a
 
