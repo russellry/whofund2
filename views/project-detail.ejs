@@ -45,6 +45,15 @@
           <div class="container-fluid">
             <br />
             <h1><%=projInfo[0].projtitle%></h1>
+            <% if(owner[0].username == currUser) { %>
+            <button class="btn btn-primary" type="button">
+                <a
+                  href="/project/<%=projInfo[0].projtitle%>/like"
+                  style="color:white"
+                  >Post update</a
+                >
+              </button>
+              <%}%>
             <ul class="list-group">
               <li class="list-group-item">
                 Date created: <%=projInfo[0].datecreated%>
@@ -59,7 +68,7 @@
                 Deadline: <%= projInfo[0].deadline%>
               </li>
               <li class="list-group-item">
-                Owned by: (change this later)
+                Owned by: <%= owner[0].username%>
               </li>
             </ul>
             <br />

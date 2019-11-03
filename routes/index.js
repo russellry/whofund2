@@ -245,6 +245,7 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
     req.params.projtitle
   );
   const comments = await getComments(req.params.projtitle);
+  const owner = await getOwner(req.params.projtitle);
   console.log(comments);
   res.render("project-detail", {
     projInfo: projInfo,
@@ -252,7 +253,9 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
     totalCurrFunds: totalCurrFunds,
     targetHit: targetHit,
     projFunders: projFunders,
-    comments: comments
+    comments: comments,
+    owner: owner,
+    currUser: req.user[0].username
   });
 });
 
@@ -481,6 +484,20 @@ async function getProjectInfo(projTitle) {
   try {
     var queryString =
       "select * from projects where projtitle = '" + projTitle + "'";
+    const results = await pool.query(queryString);
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function getOwner(projtitle) {
+  try {
+    var queryString =
+      "select o.username from projects p, owns o where p.projtitle = o.projtitle and o.projtitle = '" +
+      projtitle +
+      "'";
+    console.log(queryString);
     const results = await pool.query(queryString);
     return results.rows;
   } catch (e) {
