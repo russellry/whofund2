@@ -359,8 +359,18 @@ router.post("/project-signup", loggedIn, async (req, res, next) => {
     "', '" +
     projDeadline +
     "')";
+  var currentUser = req.user[0].username;
+  var complementQueryString =
+    "INSERT INTO owns (username, projtitle) VALUES('" +
+    currentUser +
+    "', '" +
+    projTitle +
+    "')";
+  console.log(queryString);
+  console.log(complementQueryString);
   try {
-    pool.query(queryString);
+    await pool.query(queryString);
+    await pool.query(complementQueryString);
   } catch (e) {}
 
   var tierOneAmount = req.body.tierOneAmount;
