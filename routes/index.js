@@ -101,12 +101,12 @@ router.get("/profile/:username", loggedIn, async (req, res) => {
   var toFollowUser = req.params.username;
   const isFollowing = await checkIfUserFollowing(currentUser, toFollowUser);
 
-  console.log(req.user[0].username);
+  // console.log(req.user[0].username);
   res.render("profile", { userinfo: userinfo, likes: likes, following: following, followed: followed,
     currentuser: req.user[0].username,  isFollow: isFollowing });
 });
 
-// 
+// follow/unfollow
 router.get("/profile/:username/follow", loggedIn, async (req, res) => {
   const userinfo = await getUserInfo(req.params.username);
   const likes = await getUserLikes(req.params.username);
@@ -242,13 +242,66 @@ router.get("/project/new", loggedIn, (req, res) =>
 
 router.get("/projects", loggedIn, async (req, res) => {
   const rows = await readProjects();
-  res.render("projects", { data: rows });
+  res.render("projects", { projInfo: rows });
 });
 
 router.get("/project/:projtitle", loggedIn, async (req, res) => {
-  const row = await getProjectInfo(req.params.projtitle);
-  res.render("project-detail", { data: row });
+  const projInfo = await getProjectInfo(req.params.projtitle);
+
+  const isLiked = await checkIfUserLikesProject(req.user[0].username, req.params.projtitle);
+  res.render("project-detail", { projInfo: projInfo, isLiked: isLiked });
 });
+
+router.get("/project/:projtitle/like", loggedIn, async (req,res) => {
+  var currentUser = req.user[0].username;
+  var projTitle = req.params.projtitle;
+
+  const projInfo = await getProjectInfo(projTitle);
+  const likes = await checkIfUserLikesProject(currentUser, projTitle)
+  if(likes) {
+    var msg = "You have already liked '" + projTitle + "'!";
+  } else {
+    var queryString = "INSERT INTO likes (username, projtitle) VALUES (";
+    queryString +=
+      "'" +
+      currentUser +
+      "', '" +
+      projTitle +
+      "')";
+
+    await pool.query(queryString, err => {
+      if (err) {
+        console.log("invalid values for inserting to likes");
+      } else {
+        console.log("new like created");
+      }
+    });
+    var msg = "Successfully liked " + projTitle + "!";
+  }
+  res.render("likeResult", {projInfo: projInfo, currentuser: req.user[0].username, msg: msg})
+})
+
+router.get("/project/:projtitle/unlike", loggedIn, async (req,res) => {
+  var currentUser = req.user[0].username;
+  var projTitle = req.params.projtitle;
+
+  const projInfo = await getProjectInfo(projTitle);
+  const likes = await checkIfUserLikesProject(currentUser, projTitle)
+  if(!likes) {
+    var msg = "You have not liked '" + projTitle + "' yet!";
+  } else {
+    var queryString = "DELETE FROM likes where username = $1 and projtitle = $2";
+    await pool.query(queryString, [currentUser, projTitle], err => {
+      if (err) {
+        console.log("unable to remove like entry");
+      } else {
+        console.log("removed like");
+      }
+    });
+    var msg = "Successfully unliked " + projTitle + "!";
+  }
+  res.render("likeResult", {projInfo: projInfo, currentuser: req.user[0].username, msg: msg})
+})
 
 // project page functions
 async function readProjects() {
@@ -268,6 +321,47 @@ async function getProjectInfo(projTitle) {
     return results.rows;
   } catch (e) {
     return [];
+  }
+}
+
+async function getProjectTierInfo(projTitle) {
+  try {
+    var queryString = "select tier, avg(amount) from projectbundles where projtitle = '" + projTitle + "' group by tier";
+    const results = await pool.query(queryString);
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function getProjectCurrentFundingInfo(projTitle) {
+  try {
+    var queryString = "select tier, count(*) from fundings where projtitle = '" + projTitle + "' group by tier order by tier asc";
+    const results = await pool.query(queryString);
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function getProjectCurrentFunds(projTitle) {
+  try {
+    const tierInfo = getProjectTierInfo(projtitle);
+    const fundingInfo = getProjectCurrentFundingInfo(projTitle);
+    return 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+async function checkIfUserLikesProject(username, projTitle) {
+  try {
+    var queryString = "select * from likes where username = '" + username + "' and projtitle = '" + projTitle + "'";
+    const results = await pool.query(queryString);
+    console.log(results.rows)
+    if(results.rows == undefined) return false;
+    return results.rows[0].username == username;
+  } catch(e) {
   }
 }
 

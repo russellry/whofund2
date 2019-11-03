@@ -32,27 +32,8 @@
 			<div class="col offset-0" style="margin-top:80px;">
 				<div class="container-fluid">
 					<br><br>
-					<h1>Welcome to <%=projInfo[0].projtitle%>'s page!</h1>
-					<p>Date created: <%=projInfo[0].datecreated%></p>
-					<p>Description: <%=projInfo[0].description%></p>
-					<p>Target Amount: <%=projInfo[0].targetamount%></p>
-					<p>Deadline: <%= projInfo[0].deadline%></p>
-					<p>Owned by: (user)</p>
-					<br><br><br>
-					<p>Liked by # users</p>
-					<p>Funded by # users</p>
-					<p>Current Funded Amount: $s</p>
-
-					<% if(isLiked) { %>
-						<button class="btn btn-primary" type="button">
-							<a href="/project/<%=projInfo[0].projtitle%>/unlike" style="color:white">Unlike</a>
-						</button>
-					<% } else { %>
-						<button class="btn btn-primary" type="button">
-								<a href="/project/<%=projInfo[0].projtitle%>/like" style="color:white">Like</a>
-						</button>
-					<% } %>
-					<br><br>
+					<h1><%= msg%></h1>
+					<p><a href="/project/<%=projInfo[0].projtitle%>">Return to <%=projInfo[0].projtitle%>'s project page</a></p>
 				</div>
 			</div>
 
