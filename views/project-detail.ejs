@@ -12,8 +12,6 @@
       crossorigin="anonymous"
     />
 
-    <link rel="stylesheet" href="/views/partials/comments.css" />
-
     <!-- FontAwesome CSS-->
     <script src="https://use.fontawesome.com/5a6689ed05.js"></script>
 
@@ -46,14 +44,37 @@
             <br />
             <h1><%=projInfo[0].projtitle%></h1>
             <% if(owner[0].username == currUser) { %>
-            <button class="btn btn-primary" type="button">
-                <a
-                  href="/project/<%=projInfo[0].projtitle%>/like"
-                  style="color:white"
-                  >Post update</a
-                >
-              </button>
+              <button data-toggle="collapse" data-target="#demo">Update Project</button>
+            </br><div id="demo" class="collapse"></br>
+              <form action="/project-update" method="POST">
+                <div>
+                    <textarea
+                      rows="3"
+                      cols="60"
+                      name="updates"
+                      id="updates"
+                      aria-describedby="updates"
+                      placeholder="Write your updates here..."
+                    >
+                    </textarea>
+                  </div>
+                  <input type="submit" value="Submit" /></form></br></br>
+              </div>
               <%}%>
+
+              <ul class="list-group">
+                  <% var index = 1%> <% updates.forEach((item) => { %>
+    
+                  <li
+                    class="list-group-item d-flex justify-content-between align-items-center"
+                  >
+                    <p><%=item.description %></p>
+                    <span class="badge badge-primary badge-pill"><%=index %></span>
+                    <% index += 1 %>
+                  </li>
+                  <% }); %>
+                </ul>
+
             <ul class="list-group">
               <li class="list-group-item">
                 Date created: <%=projInfo[0].datecreated%>
@@ -158,19 +179,11 @@
     </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script
-      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
-      integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
-      crossorigin="anonymous"
-    ></script>
-    <script src="{% static 'homepage/js/bootstrap.min.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.4.0/marked.min.js"></script>
+    <script src="{% static 'homepage/js/bootstrap.min.js' %}"></script>
 
     <!-- FontAwesome SVG JS -->
   </body>

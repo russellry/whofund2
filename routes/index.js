@@ -245,6 +245,8 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
     req.params.projtitle
   );
   const comments = await getComments(req.params.projtitle);
+  const updates = await getUpdates(req.params.projtitle);
+
   const owner = await getOwner(req.params.projtitle);
   console.log(comments);
   res.render("project-detail", {
@@ -255,7 +257,8 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
     projFunders: projFunders,
     comments: comments,
     owner: owner,
-    currUser: req.user[0].username
+    currUser: req.user[0].username,
+    updates: updates
   });
 });
 
@@ -315,6 +318,33 @@ router.get("/project/:projtitle/unlike", loggedIn, async (req, res) => {
 });
 
 // create new project
+
+router.post("/project-update", loggedIn, async (req, res, next) => {
+  curr_url = req.headers.referer;
+  splitstr = curr_url.split("/");
+  projTitle = splitstr[splitstr.length - 1];
+  projTitle = projTitle.replace("%20", " ");
+
+  var update = req.body.updates;
+  var updateDateCreated = api.getDateNow();
+  var queryString =
+    "INSERT INTO projectupdates (projtitle, updatetime, description) VALUES('" +
+    projTitle +
+    "', '" +
+    updateDateCreated +
+    "', '" +
+    update +
+    "')";
+  console.log(queryString);
+  try {
+    await pool.query(queryString, (err, results) => {
+      console.log("comment posted!");
+      res.redirect(curr_url);
+    });
+  } catch (e) {
+    console.log(e);
+  }
+});
 
 router.post("/post-comments", loggedIn, async (req, res, next) => {
   curr_url = req.headers.referer;
@@ -509,6 +539,17 @@ async function getComments(projTitle) {
   try {
     var queryString =
       "select * from projectfeedbacks where projtitle = '" + projTitle + "'";
+    const results = await pool.query(queryString);
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function getUpdates(projTitle) {
+  try {
+    var queryString =
+      "select * from projectupdates where projtitle = '" + projTitle + "'";
     const results = await pool.query(queryString);
     return results.rows;
   } catch (e) {
