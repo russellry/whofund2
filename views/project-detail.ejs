@@ -32,11 +32,43 @@
 			<div class="col offset-0" style="margin-top:80px;">
 				<div class="container-fluid">
 					<br><br>
-					<h1>Welcome to <%=data[0].projtitle%>'s page!</h1>
-					<p>Date created: <%=data[0].datecreated%></p>
-					<p>Description: <%=data[0].description%></p>
-					<p>Target Amount: <%=data[0].targetamount%></p>
-					<p>Deadline: <%= data[0].deadline%></p>
+					<h1>Welcome to <%=projInfo[0].projtitle%>'s page!</h1>
+					<p>Date created: <%=projInfo[0].datecreated%></p>
+					<p>Description: <%=projInfo[0].description%></p>
+					<p>Target Amount: <%=projInfo[0].targetamount%></p>
+					<p>Deadline: <%= projInfo[0].deadline%></p>
+					<p>Owned by: (user)</p>
+					<br><br><br>
+					<p>Liked by # users</p>
+					<p>Funded by # users</p>
+					<p>Current Funded Amount: $<%= totalCurrFunds %></p>
+					<% if(targetHit) { %>
+						<a>Target Amount Reached</a>
+					<% } else { %>
+						<a>Target Amount Not Reached Yet</a>
+					<% } %>
+					<br><br>
+
+					<h3>This project has been funded by:</h3> 
+					<br>
+					<ol>
+						<% projFunders.forEach((item) => { %>
+							<li><a href="/profile/<%=item.username%>"><%=item.username %></a></li>
+						<% }); %>
+					</ol>
+					
+
+
+					<% if(isLiked) { %>
+						<button class="btn btn-primary" type="button">
+							<a href="/project/<%=projInfo[0].projtitle%>/unlike" style="color:white">Unlike</a>
+						</button>
+					<% } else { %>
+						<button class="btn btn-primary" type="button">
+								<a href="/project/<%=projInfo[0].projtitle%>/like" style="color:white">Like</a>
+						</button>
+					<% } %>
+					<br><br>
 				</div>
 			</div>
 
