@@ -95,8 +95,14 @@ router.get("/profile/:username", loggedIn, async (req, res) => {
   const userinfo = await getUserInfo(req.params.username);
   const likes = await getUserLikes(req.params.username);
   const follows = await getUserFollows(req.params.username);
+
+  var currentUser = req.user[0].username;
+  var toFollowUser = req.params.username;
+  const isFollowing = await checkIfUserFollowing(currentUser, toFollowUser);
+
   console.log(req.user[0].username);
-  res.render("profile", { userinfo: userinfo, likes: likes, follows: follows, currentuser: req.user[0].username });
+  res.render("profile", { userinfo: userinfo, likes: likes, follows: follows, 
+    currentuser: req.user[0].username,  isFollow: isFollowing });
 });
 
 // 
@@ -110,8 +116,9 @@ router.get("/profile/:username/follow", loggedIn, async (req, res) => {
   var followDate = api.getDateNow();
   
   const isFollowing = await checkIfUserFollowing(currentUser, toFollowUser);
+  
   if(isFollowing) {
-    var msg = "Already following!"
+    var msg = "Already following " + toFollowUser + "!";
   } else {
     var queryString = "INSERT INTO follows (follower, followee, since) VALUES (";
     queryString +=
@@ -122,17 +129,47 @@ router.get("/profile/:username/follow", loggedIn, async (req, res) => {
       "', '" +
       followDate +
       "')";
+    
     pool.query(queryString, err => {
       if (err) {
-        console.log("invalid values");
+        console.log("invalid values for inserting to follows");
       } else {
         console.log("new follow created");
       }
     });
-    var msg = "Successfully followed!";
+    var msg = "Successfully followed " + toFollowUser + "!";
   }
-  res.render("followResult", { userinfo: userinfo, likes: likes, 
-    follows: follows, currentuser: req.user[0].username, msg: msg });
+  res.render("followResult", { userinfo: userinfo, currentuser: req.user[0].username, msg: msg });
+})
+
+router.get("/profile/:username/unfollow", loggedIn, async (req, res) => {
+  const userinfo = await getUserInfo(req.params.username);
+
+  var currentUser = req.user[0].username;
+  var followedUser = req.params.username;
+  const isFollowing = await checkIfUserFollowing(currentUser, followedUser);
+  // console.log("reached point #1");
+  // console.log(isFollowing);
+  if(!isFollowing) {
+    var msg = "You are not even following " + followedUser + "!";
+  } else {
+    try {
+      var queryString = "delete from follows where follower = $1 and followee = $2";
+      // console.log("reached point #2");
+      await pool.query(queryString, [currentUser, followedUser], err => {
+        if (err) {
+          console.log("problem deleting follow");
+        } else {
+          console.log("follow deleted");
+        }
+      });
+      var msg = "Successfully unfollowed " + followedUser + "!";
+      console.log(currentUser + " unfollowed " + followedUser)
+    } catch(e) {
+      console.log("unknown error");
+    }
+  }
+  res.render("unfollowResult", {userinfo: userinfo, msg: msg})
 })
 
 
@@ -180,13 +217,10 @@ async function checkIfUserFollowing(follower, followee) {
   try {
     var queryString = "select * from follows where follower = '" + follower + "' and followee = '" + followee + "'";
     const results = await pool.query(queryString);
-    if(results[0].follower) {
-      return true;
-    } else {
-      return false;
-    }
+    console.log(results.rows)
+    if(results.rows == undefined) return false;
+    return results.rows[0].follower == follower;
   } catch(e) {
-    return [];
   }
 }
 
