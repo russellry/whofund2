@@ -225,6 +225,13 @@ router.get("/projects", loggedIn, async (req, res) => {
   res.render("projects", { projInfo: rows });
 });
 
+router.get("/my-projects", loggedIn, async (req, res) => {
+  var currentUser = req.user[0].username;
+
+  const rows = await readMyProjects(currentUser);
+  res.render("projects", { projInfo: rows });
+});
+
 router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const projInfo = await getProjectInfo(req.params.projtitle);
   const totalCurrFunds = await getProjectTotalCurrentFunds(
@@ -439,6 +446,19 @@ router.post("/project-signup", loggedIn, async (req, res, next) => {
 async function readProjects() {
   try {
     const results = await pool.query("select * from projects");
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function readMyProjects(username) {
+  try {
+    const results = await pool.query(
+      "select * from projects p, owns o where p.projtitle = o.projtitle and o.username = '" +
+        username +
+        "'"
+    );
     return results.rows;
   } catch (e) {
     return [];
