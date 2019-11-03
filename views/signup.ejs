@@ -10,29 +10,46 @@
   </head>
   <body>
     <% include partials/base.ejs %>
-    <form id="signUpForm" action="/auth/signup" method="POST">
-      <div class="form-group">
-        <label for="signUpUsername">Username</label>
-        <input
-          type="text"
-          class="form-control"
-          name="username"
-          aria-describedby="usernameHelp"
-          placeholder="Username"
-          required
-        />
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+          <div class="card card-signin my-5">
+            <div class="card-body">
+              <h5 class="card-title text-center">Create New Account</h5>
+              <form id="signUpForm" action="/auth/signup" method="POST">
+                <div class="form-group">
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="username"
+                    aria-describedby="usernameHelp"
+                    placeholder="Username"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <input
+                    type="password"
+                    class="form-control"
+                    name="password"
+                    placeholder="Password"
+                    required
+                  />
+                </div>
+                <button
+                  class="btn btn-lg btn-primary btn-block text-uppercase"
+                  type="submit"
+                >
+                  Register
+                </button>
+                <div style="text-align: center;">
+                  Already have an account? <a href="/login">Sign in</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="signUpPassword">Password</label>
-        <input
-          type="password"
-          class="form-control"
-          name="password"
-          placeholder="Password"
-          required
-        />
-      </div>
-      <button type="submit" class="btn btn-primary">Register</button>
-    </form>
+    </div>
   </body>
 </html>
