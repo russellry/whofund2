@@ -23,46 +23,81 @@
       body {
         height: 100%;
       }
+      .user_name{
+    font-size:14px;
+    font-weight: bold;
+}
+.comments-list .media{
+    border-bottom: 1px dotted #ccc;
+}
     </style>
   </head>
 
   <body class="body" style="background-color:#f6f6f6">
     <% include partials/base.ejs %>
 
-    <div class="container-fluid">
+    <div class="container-fluid" style="text-align: center;">
       <div class="row">
         <div style="float:left; width:100%; height:100%;"></div>
 
         <!--Content-->
-        <div class="col offset-0" style="margin-top:80px;">
+        <div class="col-10 offset-1">
           <div class="container-fluid">
-            <br /><br />
+            <br />
             <h1>Welcome to <%=projInfo[0].projtitle%>'s page!</h1>
-            <p>Date created: <%=projInfo[0].datecreated%></p>
-            <p>Description: <%=projInfo[0].description%></p>
-            <p>Target Amount: <%=projInfo[0].targetamount%></p>
-            <p>Deadline: <%= projInfo[0].deadline%></p>
-            <p>Owned by: (change this later)</p>
-            <br /><br /><br />
-            <p>Liked by # users</p>
-            <p>Funded by # users</p>
-            <p>Current Funded Amount: $<%= totalCurrFunds %></p>
-            <% if(targetHit) { %>
-            <a>Target Amount Reached</a>
-            <% } else { %>
-            <a>Target Amount Not Reached Yet</a>
+            <ul class="list-group">
+              <li class="list-group-item">
+                Date created: <%=projInfo[0].datecreated%>
+              </li>
+              <li class="list-group-item">
+                Description: <%=projInfo[0].description%>
+              </li>
+              <li class="list-group-item">
+                Target Amount: $<%=projInfo[0].targetamount%>
+              </li>
+              <li class="list-group-item">
+                Deadline: <%= projInfo[0].deadline%>
+              </li>
+              <li class="list-group-item">
+                Owned by: (change this later)
+              </li>
+            </ul>
+            <br />
+            <ul class="list-group">
+              <li class="list-group-item">
+                Liked by # users
+              </li>
+              <li class="list-group-item">
+                Funded by # users
+              </li>
+              <li class="list-group-item">
+                Current Funded Amount: $<%= totalCurrFunds %>
+              </li>
+              <li class="list-group-item">
+                <% if(targetHit) { %>
+                <a>Target Amount Reached</a>
+                <% } else { %>
+                <a>Target Amount Not Reached Yet</a>
+              </li>
+            </ul>
+
             <% } %>
-            <br /><br />
+            <br />
 
             <h3>This project has been funded by:</h3>
             <br />
-            <ol>
-              <% projFunders.forEach((item) => { %>
-              <li>
+            <ul class="list-group">
+              <% var index = 1%> <% projFunders.forEach((item) => { %>
+
+              <li
+                class="list-group-item d-flex justify-content-between align-items-center"
+              >
                 <a href="/profile/<%=item.username%>"><%=item.username %></a>
+                <span class="badge badge-primary badge-pill"><%=index %></span>
+                <% index += 1 %>
               </li>
               <% }); %>
-            </ol>
+            </ul>
 
             <% if(isLiked) { %>
             <button class="btn btn-primary" type="button">
@@ -73,6 +108,8 @@
               >
             </button>
             <% } else { %>
+            </br>
+            <h3>Give this project the support it needs!</h3>
             <button class="btn btn-primary" type="button">
               <a
                 href="/project/<%=projInfo[0].projtitle%>/like"
@@ -83,15 +120,31 @@
             <% } %>
             <br /><br />
           </div>
-          <% comments.forEach((item) => {%>
-          <li>
-            <a href="/profile/<%=item.username%>"><%=item.username %></a>
-            <%=item.commenttime%> <%=item.description%>
-          </li>
-          <%}); %> <% include partials/comments.ejs %>
+          <div class="card">
+              <div class="card-body">
+                  <div class="row">
+                      <div class="col-10 offset-1">
+                          <% comments.forEach((item) => {%>
+
+                          <p>
+                              <a class="float-left" href="/profile/<%=item.username%>"><strong><%=item.username %></strong></a>
+                              <%=item.commenttime%> 
+                         </p>
+                          <p><%=item.description%></p>
+
+                         <%}); %> 
+                      </div>
+                  </div>
+                    
+              </div>
+          </div>
+        </br>
+          <% include partials/comments.ejs %>        </br>
+        </br>
+      </br>
+
         </div>
 
-        <div style="float:right; width:400px; height:100%;"></div>
       </div>
     </div>
 
