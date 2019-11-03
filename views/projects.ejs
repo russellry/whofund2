@@ -23,10 +23,8 @@
 					<h1>List of projects</h1>
 					<br><br>
 					<ol>
-						<% data.forEach((item) => { %>
+						<% projInfo.forEach((item) => { %>
 							<li><a href="/project/<%=item.projtitle%>"><%=item.projtitle %></a></li>
-							<!-- <br>
-							<p><%= item.joineddate %></p> -->
 						<% }); %>
 					</ol>
 				</div>
