@@ -36,7 +36,8 @@
 					
 					<p>Join date: <%=userinfo[0].joineddate%></p>
 					<p>Number of projects liked: <%= likes.length %></p>
-					<p>Number of users following: <%= follows.length%></p>
+					<p>Following <%= following.length%> user(s)</p>
+					<p>Followed by <%= followed.length%> user(s)</p>
 					<% if(isFollow == true) { %>
 						<button class="btn btn-primary" type="button">
 							<a href="/profile/<%=userinfo[0].username%>/unfollow" style="color:white">Unfollow</a>

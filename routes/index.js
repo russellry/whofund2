@@ -94,14 +94,15 @@ router.get("/users", loggedIn, async (req, res) => {
 router.get("/profile/:username", loggedIn, async (req, res) => {
   const userinfo = await getUserInfo(req.params.username);
   const likes = await getUserLikes(req.params.username);
-  const follows = await getUserFollows(req.params.username);
+  const following = await getUserFollows(req.params.username);
+  const followed = await getUserFollowed(req.params.username);
 
   var currentUser = req.user[0].username;
   var toFollowUser = req.params.username;
   const isFollowing = await checkIfUserFollowing(currentUser, toFollowUser);
 
   console.log(req.user[0].username);
-  res.render("profile", { userinfo: userinfo, likes: likes, follows: follows, 
+  res.render("profile", { userinfo: userinfo, likes: likes, following: following, followed: followed,
     currentuser: req.user[0].username,  isFollow: isFollowing });
 });
 
@@ -206,6 +207,16 @@ async function getUserLikes(username) {
 async function getUserFollows(username) {
   try {
     var queryString = "select followee, since from follows where follower = '" + username + "'";
+    const results = await pool.query(queryString);
+    return results.rows;
+  } catch(e) {
+    return [];
+  }
+}
+
+async function getUserFollowed(username) {
+  try {
+    var queryString = "select follower, since from follows where followee = '" + username + "'";
     const results = await pool.query(queryString);
     return results.rows;
   } catch(e) {
