@@ -32,15 +32,7 @@
 			<div class="col offset-0" style="margin-top:80px;">
 				<div class="container-fluid">
 					<br><br>
-					<h1>Welcome to <%=userinfo[0].username%>'s profile!</h1>
-					
-					<p>Join date: <%=userinfo[0].joineddate%></p>
-					<%= currentuser %>
-					<p>Number of projects liked: <%= likes.length %></p>
-					<p>Number of users following: <%= follows.length%></p>
-					<button class="btn btn-primary" type="button">
-						<a href="/profile/<%=userinfo[0].username%>/follow" style="color:white">Follow</a>
-					</button>
+					<h1><%= msg%></h1>
 					
 				</div>
 			</div>

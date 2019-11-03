@@ -5,7 +5,7 @@ var api = require("../api");
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
+  connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
 });
 
 // static files
@@ -84,17 +84,57 @@ router.post("/project-signup", loggedIn, (req, res, next) => {
   });
 });
 
-// user pages
+// get all users
 router.get("/users", loggedIn, async (req, res) => {
   const rows = await readUsers();
   res.render("users", { data: rows });
 });
 
+// get specific user profile
 router.get("/profile/:username", loggedIn, async (req, res) => {
-  const row = await getUserInfo(req.params.username);
-  // await getUserInfo(req.params.username);
-  res.render("profile", { data: row });
+  const userinfo = await getUserInfo(req.params.username);
+  const likes = await getUserLikes(req.params.username);
+  const follows = await getUserFollows(req.params.username);
+  console.log(req.user[0].username);
+  res.render("profile", { userinfo: userinfo, likes: likes, follows: follows, currentuser: req.user[0].username });
 });
+
+// 
+router.get("/profile/:username/follow", loggedIn, async (req, res) => {
+  const userinfo = await getUserInfo(req.params.username);
+  const likes = await getUserLikes(req.params.username);
+  const follows = await getUserFollows(req.params.username);
+
+  var currentUser = req.user[0].username;
+  var toFollowUser = req.params.username;
+  var followDate = api.getDateNow();
+  
+  const isFollowing = await checkIfUserFollowing(currentUser, toFollowUser);
+  if(isFollowing) {
+    var msg = "Already following!"
+  } else {
+    var queryString = "INSERT INTO follows (follower, followee, since) VALUES (";
+    queryString +=
+      "'" +
+      currentUser +
+      "', '" +
+      toFollowUser +
+      "', '" +
+      followDate +
+      "')";
+    pool.query(queryString, err => {
+      if (err) {
+        console.log("invalid values");
+      } else {
+        console.log("new follow created");
+      }
+    });
+    var msg = "Successfully followed!";
+  }
+  res.render("followResult", { userinfo: userinfo, likes: likes, 
+    follows: follows, currentuser: req.user[0].username, msg: msg });
+})
+
 
 // user page functions
 async function readUsers() {
@@ -116,6 +156,40 @@ async function getUserInfo(username) {
   }
 }
 
+async function getUserLikes(username) {
+  try {
+    var queryString = "select projtitle from likes where username = '" + username + "'";
+    const results = await pool.query(queryString);
+    return results.rows;
+  } catch(e) {
+    return [];
+  }
+}
+
+async function getUserFollows(username) {
+  try {
+    var queryString = "select followee, since from follows where follower = '" + username + "'";
+    const results = await pool.query(queryString);
+    return results.rows;
+  } catch(e) {
+    return [];
+  }
+}
+
+async function checkIfUserFollowing(follower, followee) {
+  try {
+    var queryString = "select * from follows where follower = '" + follower + "' and followee = '" + followee + "'";
+    const results = await pool.query(queryString);
+    if(results[0].follower) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch(e) {
+    return [];
+  }
+}
+
 //project pages
 router.get("/project/new", loggedIn, (req, res) =>
   res.render("project-signup")
@@ -124,15 +198,6 @@ router.get("/project/new", loggedIn, (req, res) =>
 router.get("/projects", loggedIn, async (req, res) => {
   const rows = await readProjects();
   res.render("projects", { data: rows });
-  // var queryString = "Select * from projects";
-  // pool.query(queryString, (err, data) => {
-  //   if (err) {
-  //     console.log(err);
-  //   } else {
-  //     document.getElementById("project-list-data").innerHTML = data.rows;
-  //     console.log("got all of the projects");
-  //   }
-  // });
 });
 
 router.get("/project/:projtitle", loggedIn, async (req, res) => {
