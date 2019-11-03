@@ -248,11 +248,12 @@ router.get("/projects", loggedIn, async (req, res) => {
 router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const projInfo = await getProjectInfo(req.params.projtitle);
   const totalCurrFunds = await getProjectTotalCurrentFunds(req.params.projtitle);
-  console.log("The total current funding is : " + totalCurrFunds);
+  const projFunders = await getProjectFunders(req.params.projtitle);
 
   const targetHit = await checkIfProjectTargetHit(req.params.projtitle);
   const isLiked = await checkIfUserLikesProject(req.user[0].username, req.params.projtitle);
-  res.render("project-detail", { projInfo: projInfo, isLiked: isLiked, totalCurrFunds: totalCurrFunds, targetHit: targetHit });
+  res.render("project-detail", { projInfo: projInfo, isLiked: isLiked, totalCurrFunds: totalCurrFunds, 
+    targetHit: targetHit, projFunders: projFunders });
 });
 
 router.get("/project/:projtitle/like", loggedIn, async (req,res) => {
@@ -334,6 +335,16 @@ async function getProjectTotalCurrentFunds(projTitle) {
     return results.rows[0].sum;
   } catch (e) {
     return 0;
+  }
+}
+
+async function getProjectFunders(projTitle) {
+  try {
+    var queryString = "select distinct username from fundings where projtitle = '" + projTitle + "'";
+    const results = await pool.query(queryString);
+    return results.rows;
+  } catch (e) {
+    return [];
   }
 }
 

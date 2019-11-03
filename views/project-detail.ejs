@@ -49,6 +49,16 @@
 					<% } %>
 					<br><br>
 
+					<h3>This project has been funded by:</h3> 
+					<br>
+					<ol>
+						<% projFunders.forEach((item) => { %>
+							<li><a href="/profile/<%=item.username%>"><%=item.username %></a></li>
+						<% }); %>
+					</ol>
+					
+
+
 					<% if(isLiked) { %>
 						<button class="btn btn-primary" type="button">
 							<a href="/project/<%=projInfo[0].projtitle%>/unlike" style="color:white">Unlike</a>
