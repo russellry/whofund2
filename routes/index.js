@@ -169,7 +169,7 @@ router.get("/profile/:username/unfollow", loggedIn, async (req, res) => {
       console.log("unknown error");
     }
   }
-  res.render("unfollowResult", {userinfo: userinfo, msg: msg})
+  res.render("followResult", {userinfo: userinfo, msg: msg})
 })
 
 
