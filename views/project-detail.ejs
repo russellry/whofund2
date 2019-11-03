@@ -41,7 +41,13 @@
 					<br><br><br>
 					<p>Liked by # users</p>
 					<p>Funded by # users</p>
-					<p>Current Funded Amount: $s</p>
+					<p>Current Funded Amount: $<%= totalCurrFunds %></p>
+					<% if(targetHit) { %>
+						<a>Target Amount Reached</a>
+					<% } else { %>
+						<a>Target Amount Not Reached Yet</a>
+					<% } %>
+					<br><br>
 
 					<% if(isLiked) { %>
 						<button class="btn btn-primary" type="button">

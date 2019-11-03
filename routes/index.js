@@ -247,9 +247,12 @@ router.get("/projects", loggedIn, async (req, res) => {
 
 router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const projInfo = await getProjectInfo(req.params.projtitle);
+  const totalCurrFunds = await getProjectTotalCurrentFunds(req.params.projtitle);
+  console.log("The total current funding is : " + totalCurrFunds);
 
+  const targetHit = await checkIfProjectTargetHit(req.params.projtitle);
   const isLiked = await checkIfUserLikesProject(req.user[0].username, req.params.projtitle);
-  res.render("project-detail", { projInfo: projInfo, isLiked: isLiked });
+  res.render("project-detail", { projInfo: projInfo, isLiked: isLiked, totalCurrFunds: totalCurrFunds, targetHit: targetHit });
 });
 
 router.get("/project/:projtitle/like", loggedIn, async (req,res) => {
@@ -324,33 +327,24 @@ async function getProjectInfo(projTitle) {
   }
 }
 
-async function getProjectTierInfo(projTitle) {
+async function getProjectTotalCurrentFunds(projTitle) {
   try {
-    var queryString = "select tier, avg(amount) from projectbundles where projtitle = '" + projTitle + "' group by tier";
+    var queryString = "select sum(pb.amount) from projectbundles pb natural join fundings f where f.projtitle = '" + projTitle + "'"
     const results = await pool.query(queryString);
-    return results.rows;
+    return results.rows[0].sum;
   } catch (e) {
-    return [];
+    return 0;
   }
 }
 
-async function getProjectCurrentFundingInfo(projTitle) {
+async function checkIfProjectTargetHit(projTitle) {
   try {
-    var queryString = "select tier, count(*) from fundings where projtitle = '" + projTitle + "' group by tier order by tier asc";
-    const results = await pool.query(queryString);
-    return results.rows;
+    const projInfo = await getProjectInfo(projTitle);
+    const targetAmount = projInfo[0].targetamount;
+    const currAmount = await getProjectTotalCurrentFunds(projTitle);
+    return (targetAmount - currAmount <= 0);
   } catch (e) {
-    return [];
-  }
-}
-
-async function getProjectCurrentFunds(projTitle) {
-  try {
-    const tierInfo = getProjectTierInfo(projtitle);
-    const fundingInfo = getProjectCurrentFundingInfo(projTitle);
-    return 0;
-  } catch (e) {
-    return 0;
+    return false;
   }
 }
 
