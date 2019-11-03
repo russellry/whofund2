@@ -12,21 +12,29 @@
   <body>
     <% include partials/base.ejs %>
 
-	<div class="container-fluid">
+	<div class="container-fluid" style="text-align: center;">
 		<div class="row">
 			
-			<div style="float:left; width:400px; height:100%;"></div>
+			<div style="float:left; width:100%; height:100%;"></div>
 
 			<!--Content-->
-			<div class="col offset-0" style="margin-top:80px;">
+			<div class="col-8 offset-2">
 				<div class="container-fluid">
 					<h1>List of projects</h1>
-					<br><br>
-					<ol>
-						<% projInfo.forEach((item) => { %>
-							<li><a href="/project/<%=item.projtitle%>"><%=item.projtitle %></a></li>
-						<% }); %>
-					</ol>
+					<br>
+
+					<ul class="list-group">
+							<% var index = 1%> <% projInfo.forEach((item) => { %>
+			  
+							<li
+							  class="list-group-item d-flex justify-content-between align-items-center"
+							>
+							<a href="/project/<%=item.projtitle%>"><%=item.projtitle %></a>
+							  <span class="badge badge-primary badge-pill"><%=index %></span>
+							  <% index += 1 %>
+							</li>
+							<% }); %>
+						  </ul>
 				</div>
 			</div>
 
