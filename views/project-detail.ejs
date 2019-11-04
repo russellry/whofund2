@@ -95,10 +95,17 @@
             <br />
             <ul class="list-group">
               <li class="list-group-item">
-                Liked by # users
+                Liked by <%=likers.length%> user(s)
               </li>
               <li class="list-group-item">
-                Funded by # users
+                Funded by 
+                <% if(likers.length) { %>
+                  <%=projFunders.length%> 
+                <% } else { %>
+                  0
+                <% } %>
+                
+                user(s)
               </li>
               <li class="list-group-item">
                 Current Funded Amount: $<%= totalCurrFunds %>
@@ -109,6 +116,39 @@
                 <% } else { %>
                 <a>Target Amount Not Reached Yet</a>
               </li>
+              <% if(!targetHit && owner[0].username != currUser) { %>
+                <% if(!tier1Funded) { %>
+                  <button class="btn btn-primary" type="button">
+                    <a
+                      href="/project/<%=projInfo[0].projtitle%>/fund/1"
+                      style="color:white"
+                      >Fund Tier 1</a
+                    >
+                  </button>
+                <% } %>
+                
+                <% if(!tier2Funded) { %>
+                  <button class="btn btn-primary" type="button">
+                    <a
+                      href="/project/<%=projInfo[0].projtitle%>/fund/2"
+                      style="color:white"
+                      >Fund Tier 2</a
+                    >
+                  </button>
+                <% } %>
+              
+                <% if(!tier3Funded) { %>
+                  <button class="btn btn-primary" type="button">
+                    <a
+                      href="/project/<%=projInfo[0].projtitle%>/fund/3"
+                      style="color:white"
+                      >Fund Tier 3</a
+                    >
+                  </button>
+                <% } %>
+                    
+
+              <% } %>
             </ul>
 
             <% } %>

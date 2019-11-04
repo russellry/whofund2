@@ -83,8 +83,8 @@ router.get("/profile/:username", loggedIn, async (req, res) => {
 // follow/unfollow
 router.get("/profile/:username/follow", loggedIn, async (req, res) => {
   const userinfo = await getUserInfo(req.params.username);
-  const likes = await getUserLikes(req.params.username);
-  const follows = await getUserFollows(req.params.username);
+  // const likes = await getUserLikes(req.params.username);
+  // const follows = await getUserFollows(req.params.username);
 
   var currentUser = req.user[0].username;
   var toFollowUser = req.params.username;
@@ -94,6 +94,8 @@ router.get("/profile/:username/follow", loggedIn, async (req, res) => {
 
   if (isFollowing) {
     var msg = "Already following " + toFollowUser + "!";
+  } else if(currentUser == toFollowUser) {
+    var msg = "Cannot follow yourself!";
   } else {
     var queryString =
       "INSERT INTO follows (follower, followee, since) VALUES (";
@@ -233,32 +235,45 @@ router.get("/my-projects", loggedIn, async (req, res) => {
 });
 
 router.get("/project/:projtitle", loggedIn, async (req, res) => {
-  const projInfo = await getProjectInfo(req.params.projtitle);
+  const projTitle = req.params.projtitle;
+  const projInfo = await getProjectInfo(projTitle);
   const totalCurrFunds = await getProjectTotalCurrentFunds(
     req.params.projtitle
   );
-  const projFunders = await getProjectFunders(req.params.projtitle);
+  const projFunders = await getProjectFunders(projTitle);
 
-  const targetHit = await checkIfProjectTargetHit(req.params.projtitle);
+  const targetHit = await checkIfProjectTargetHit(projTitle);
   const isLiked = await checkIfUserLikesProject(
     req.user[0].username,
     req.params.projtitle
   );
-  const comments = await getComments(req.params.projtitle);
-  const updates = await getUpdates(req.params.projtitle);
+  const comments = await getComments(projTitle);
+  const updates = await getUpdates(projTitle);
 
-  const owner = await getOwner(req.params.projtitle);
+  const owner = await getOwner(projTitle);
   console.log(comments);
+
+  const currUser = req.user[0].username;
+  const checkTier1Funded = await checkIfUserHasFundedTier(currUser, projTitle, 1);
+  const checkTier2Funded = await checkIfUserHasFundedTier(currUser, projTitle, 2);
+  const checkTier3Funded = await checkIfUserHasFundedTier(currUser, projTitle, 3);
+  
+  const likers = await getUsersWhoLike(projTitle);
+
   res.render("project-detail", {
     projInfo: projInfo,
     isLiked: isLiked,
     totalCurrFunds: totalCurrFunds,
     targetHit: targetHit,
     projFunders: projFunders,
+    likers: likers,
     comments: comments,
     owner: owner,
-    currUser: req.user[0].username,
-    updates: updates
+    currUser: currUser,
+    updates: updates,
+    tier1Funded: checkTier1Funded,
+    tier2Funded: checkTier2Funded,
+    tier3Funded: checkTier3Funded
   });
 });
 
@@ -317,8 +332,44 @@ router.get("/project/:projtitle/unlike", loggedIn, async (req, res) => {
   });
 });
 
-// create new project
+// funding by users 
+router.get("/project/:projtitle/fund/:tier", loggedIn, async (req, res) => {
+  var currentUser = req.user[0].username;
+  var projTitle = req.params.projtitle;
+  var fundTier = req.params.tier;
+  console.log("Current FundTier is :" + fundTier);
+  const projInfo = await getProjectInfo(projTitle);
+  const projOwnerInfo = await getOwner(projTitle);
+  const projOwnerName = projOwnerInfo[0].username;
+  const funded = await checkIfUserHasFundedTier(currentUser, projTitle, fundTier);
+  console.log("Funded status is: " + funded);
+  if(currentUser == projOwnerName) {
+    var msg = "You cannot fund your own project!";
+  } else if (funded) {
+    var msg = "You have already funded " + projTitle + " at tier " + fundTier + "!";
+  } else {
+    var queryString = "INSERT INTO fundings (username, projtitle, tier) VALUES (";
+    queryString += "'" + currentUser + "', '" + projTitle + "', '" + fundTier + "')";
+    console.log(queryString);
+    await pool.query(queryString, err => {
+      if (err) {
+        console.log(fundTier);
+        console.log("invalid values for inserting to fundings");
+      } else {
+        console.log("new funding created");
+      }
+    });
+    var msg = "Successfully funded " + projTitle + " at tier " + fundTier + "!";
+  }
 
+  res.render("fundResult", {
+    projInfo: projInfo,
+    currentuser: req.user[0].username,
+    msg: msg
+  });
+});
+
+// post project updates by owner
 router.post("/project-update", loggedIn, async (req, res, next) => {
   curr_url = req.headers.referer;
   splitstr = curr_url.split("/");
@@ -602,6 +653,26 @@ async function checkIfUserLikesProject(username, projTitle) {
     console.log(results.rows);
     if (results.rows == undefined) return false;
     return results.rows[0].username == username;
+  } catch (e) {}
+}
+
+async function checkIfUserHasFundedTier(currentUser, projTitle, fundTier) {
+  try {
+    var queryString = "select * from fundings where username = $1 and projtitle = $2 and tier = $3";
+    const results = await pool.query(queryString, [currentUser, projTitle, fundTier]);
+    console.log(results.rows);
+    if (results.rows == undefined) return false;
+    return results.rows[0].username == currentUser  ;
+  } catch (e) {}
+}
+
+async function getUsersWhoLike(projTitle) {
+  try {
+    var queryString = "select * from likes where projtitle = $1";
+    const results = await pool.query(queryString, [projTitle]);
+    console.log(results.rows);
+    if (results.rows == undefined) return [];
+    return results.rows;
   } catch (e) {}
 }
 
