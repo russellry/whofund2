@@ -672,6 +672,25 @@ router.post("/project/:projtitle/add-milestone", loggedIn, async (req, res, next
 router.get("/milestoneexists-error", loggedIn, (req,res,next) => {
   res.render("milestoneexists-error");
 })
+
+router.get("/project/:projtitle/delete", loggedIn, async (req, res, next) => {
+  console.log("hi");
+  var projTitle = req.params.projtitle;
+  const results = await deleteProject(projTitle);
+  console.log("trying to delete project now");
+  if(results) {
+    console.log("BYEBYE");
+    res.redirect("/projects");
+  } else {
+    console.log("failed to delete project");
+    res.redirect("/project/" + projTitle);
+  }
+})
+
+
+
+
+
 // project page functions
 async function readProjects() {
   try {
@@ -854,6 +873,27 @@ async function getProjectBundleItem(projTitle, tier) {
     return results.rows;
   } catch (e) {}
 }
+
+async function deleteProject(projTitle) {
+  try {
+    var queryString = "delete from owns where projtitle = $1"
+    var queryString2 = "delete from likes where projtitle = $1"
+    var queryString3 = "delete from taggedwith where projtitle = $1"
+    var queryString4 = "delete from projects where projtitle = $1"
+    
+    await pool.query(queryString, [projTitle]);
+    await pool.query(queryString2, [projTitle]);
+    await pool.query(queryString3, [projTitle]);
+    await pool.query(queryString4, [projTitle]);
+    return true;
+    
+  } catch (e) {
+    console.log("error with deleting project!");
+    console.log("Error is: " + e);
+    return false;
+  }
+}
+
 //End import part a
 
 module.exports = router;
