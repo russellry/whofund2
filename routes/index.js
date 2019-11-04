@@ -464,6 +464,18 @@ router.post("/project-signup", loggedIn, async (req, res, next) => {
     await pool.query(complementQueryString);
   } catch (e) {}
 
+  var projCategory = req.body.projectCategory;
+  console.log("Project Category is : " + projCategory);
+  var categoryString = "INSERT INTO taggedwith(projtitle, type) VALUES ('" + projTitle + "', '" + projCategory + "')";
+  await pool.query(categoryString, err => {
+    if(err) {
+      console.log("problem adding category");
+    } else {
+      console.log("category added");
+    }
+  });
+  
+
   var tierOneAmount = req.body.tierOneAmount;
   var tierOneRewards = req.body.tierOneRewards;
   var tierTwoAmount = req.body.tierTwoAmount;
