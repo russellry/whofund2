@@ -674,12 +674,11 @@ router.get("/milestoneexists-error", loggedIn, (req,res,next) => {
 })
 
 router.get("/project/:projtitle/delete", loggedIn, async (req, res, next) => {
-  console.log("hi");
   var projTitle = req.params.projtitle;
   const results = await deleteProject(projTitle);
   console.log("trying to delete project now");
   if(results) {
-    console.log("BYEBYE");
+    console.log("project deleted")
     res.redirect("/projects");
   } else {
     console.log("failed to delete project");
@@ -815,7 +814,7 @@ async function checkIfUserLikesProject(username, projTitle) {
       projTitle +
       "'";
     const results = await pool.query(queryString);
-    console.log(results.rows);
+    // console.log(results.rows);
     if (results.rows == undefined) return false;
     return results.rows[0].username == username;
   } catch (e) {}
@@ -825,7 +824,7 @@ async function checkIfUserHasFundedTier(currentUser, projTitle, fundTier) {
   try {
     var queryString = "select * from fundings where username = $1 and projtitle = $2 and tier = $3";
     const results = await pool.query(queryString, [currentUser, projTitle, fundTier]);
-    console.log(results.rows);
+    // console.log(results.rows);
     if (results.rows == undefined) return false;
     return results.rows[0].username == currentUser  ;
   } catch (e) {}
@@ -835,7 +834,7 @@ async function getUsersWhoLike(projTitle) {
   try {
     var queryString = "select * from likes where projtitle = $1";
     const results = await pool.query(queryString, [projTitle]);
-    console.log(results.rows);
+    // console.log(results.rows);
     if (results.rows == undefined) return [];
     return results.rows;
   } catch (e) {}
@@ -845,7 +844,7 @@ async function checkIfMilestoneExists(projTitle, milestoneNumber) {
   try {
     var queryString = "select * from projectmilestones where projtitle = $1 and milestoneno = $2";
     const results = await pool.query(queryString, [projTitle, milestoneNumber]);
-    console.log(results.rows);
+    // console.log(results.rows);
     if (results.rows == undefined) return false;
     return results.rows[0].projtitle = projTitle;
   } catch (e) {
@@ -857,7 +856,7 @@ async function getProjMilestones(projTitle) {
   try {
     var queryString = "select * from projectmilestones where projtitle = $1";
     const results = await pool.query(queryString, [projTitle]);
-    console.log(results.rows);
+    // console.log(results.rows);
     if (results.rows == undefined) return [];
     return results.rows;
   } catch (e) {}
@@ -866,9 +865,9 @@ async function getProjMilestones(projTitle) {
 async function getProjectBundleItem(projTitle, tier) {
   try {
     var queryString = "select * from projectbundles where projtitle = $1 and tier = $2";
-    console.log("Tier is " + tier)
+    // console.log("Tier is " + tier)
     const results = await pool.query(queryString, [projTitle, tier]);
-    console.log(results.rows);
+    // console.log(results.rows);
     if (results.rows == undefined) return [];
     return results.rows;
   } catch (e) {}
