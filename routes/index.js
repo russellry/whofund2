@@ -5,8 +5,8 @@ var api = require("../api");
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  // connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
-  connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
+  connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
+  // connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
 });
 
 // static files
@@ -521,13 +521,9 @@ async function getProjectInfo(projTitle) {
   }
 }
 
-async function getOwner(projtitle) {
+async function getOwner(projTitle) {
   try {
-    var queryString =
-      "select o.username from projects p, owns o where p.projtitle = o.projtitle and o.projtitle = '" +
-      projtitle +
-      "'";
-    console.log(queryString);
+    var queryString = "select username from owns where projtitle = '" + projTitle + "'";
     const results = await pool.query(queryString);
     return results.rows;
   } catch (e) {
