@@ -259,6 +259,13 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const checkTier3Funded = await checkIfUserHasFundedTier(currUser, projTitle, 3);
   
   const likers = await getUsersWhoLike(projTitle);
+  const milestones = await getProjMilestones(projTitle);
+  const bundle1 = await getProjectBundleItem(projTitle, 1);
+  const bundle2 = await getProjectBundleItem(projTitle, 2);
+  const bundle3 = await getProjectBundleItem(projTitle, 3);
+
+  console.log("Bundle 1 Amount: " + bundle1.amount);
+  console.log("Bundle 1 Description: " + bundle1.description);
 
   res.render("project-detail", {
     projInfo: projInfo,
@@ -271,9 +278,13 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
     owner: owner,
     currUser: currUser,
     updates: updates,
+    milestones: milestones,
     tier1Funded: checkTier1Funded,
     tier2Funded: checkTier2Funded,
-    tier3Funded: checkTier3Funded
+    tier3Funded: checkTier3Funded,
+    bundle1: bundle1,
+    bundle2: bundle2,
+    bundle3: bundle3
   });
 });
 
@@ -523,8 +534,12 @@ router.post("/project-signup", loggedIn, async (req, res, next) => {
   res.redirect("/projects");
 });
 
-router.get("/editError", loggedIn, async(req,res,next) => {
-  res.render("edit-error")
+router.get("/access-errorr", loggedIn, async(req,res,next) => {
+  res.render("access-error")
+})
+
+router.get("/invalidproject-error", loggedIn, async(req, res, next) => {
+  res.render("invalidproject-error")
 })
 
 router.get("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
@@ -532,7 +547,7 @@ router.get("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
   var currUser = req.user[0].username;
   var projOwner = await getOwner(projInfo[0].projtitle);
   if(currUser != projOwner[0].username) {
-    res.redirect("/editError");
+    res.redirect("/access-error");
   }
 
   res.render("project-edit", {projInfo: projInfo});
@@ -545,7 +560,7 @@ router.post("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
   var projDeadline = req.body.projectDeadline;
   const projTitleExists = await checkProjTitle(projTitle);
   if (!projTitleExists) {
-    res.redirect("/error/invalidproject");
+    res.redirect("/invalidproject-error");
   }
   console.log(projDesc);
   console.log(projTargetAmt);
@@ -620,14 +635,43 @@ router.post("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
   res.redirect("/project/"+projTitle);
 });
 
-router.get("/project/:projtitle/milestone-add", loggedIn, async (req, res, next) => {
-  res.render("project-milestone-add");
+router.get("/project/:projtitle/add-milestone", loggedIn, async (req, res, next) => {
+  var projInfo = await getProjectInfo(req.params.projtitle);
+  var currUser = req.user[0].username;
+  var projOwner = await getOwner(projInfo[0].projtitle);
+  if(currUser != projOwner[0].username) {
+    res.redirect("/access-error");
+  }
+  res.render("project-add-milestone", {projInfo: projInfo});
 });
 
-router.post("/project/:projtitle/milestone-add", loggedIn, async (req, res, next) => {
-
+router.post("/project/:projtitle/add-milestone", loggedIn, async (req, res, next) => {
+  var projTitle = req.params.projtitle;
+  var milestoneNumber = req.body.milestoneNumber
+  var milestoneDesc = req.body.milestoneDesc;
+  var milestoneTargetAmt = req.body.milestoneTargetAmt;
+  const projTitleExists = await checkProjTitle(projTitle);
+  if (!projTitleExists) {
+    res.redirect("/invalidproject-error");
+  }
+  var milestoneExist = await checkIfMilestoneExists(projTitle, milestoneNumber);
+  if(milestoneExist) {
+    res.redirect("/milestoneexists-error")
+  }
+  var queryString = "INSERT INTO projectmilestones(projtitle, milestoneno, amount, description) VALUES ($1, $2, $3, $4)";
+  await pool.query(queryString, [projTitle, milestoneNumber, milestoneTargetAmt, milestoneDesc], err => {
+    if(err) {
+      console.log("problem adding milestone");
+    } else {
+      console.log("milestone added");
+    }
+  })
+  res.redirect("/project/" + projTitle);
 });
 
+router.get("/milestoneexists-error", loggedIn, (req,res,next) => {
+  res.render("milestoneexists-error");
+})
 // project page functions
 async function readProjects() {
   try {
@@ -778,6 +822,38 @@ async function getUsersWhoLike(projTitle) {
   } catch (e) {}
 }
 
+async function checkIfMilestoneExists(projTitle, milestoneNumber) {
+  try {
+    var queryString = "select * from projectmilestones where projtitle = $1 and milestoneno = $2";
+    const results = await pool.query(queryString, [projTitle, milestoneNumber]);
+    console.log(results.rows);
+    if (results.rows == undefined) return false;
+    return results.rows[0].projtitle = projTitle;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function getProjMilestones(projTitle) {
+  try {
+    var queryString = "select * from projectmilestones where projtitle = $1";
+    const results = await pool.query(queryString, [projTitle]);
+    console.log(results.rows);
+    if (results.rows == undefined) return [];
+    return results.rows;
+  } catch (e) {}
+}
+
+async function getProjectBundleItem(projTitle, tier) {
+  try {
+    var queryString = "select * from projectbundles where projtitle = $1 and tier = $2";
+    console.log("Tier is " + tier)
+    const results = await pool.query(queryString, [projTitle, tier]);
+    console.log(results.rows);
+    if (results.rows == undefined) return [];
+    return results.rows;
+  } catch (e) {}
+}
 //End import part a
 
 module.exports = router;
