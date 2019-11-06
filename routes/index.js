@@ -259,6 +259,13 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const checkTier3Funded = await checkIfUserHasFundedTier(currUser, projTitle, 3);
   
   const likers = await getUsersWhoLike(projTitle);
+  const milestones = await getProjMilestones(projTitle);
+  const bundle1 = await getProjectBundleItem(projTitle, 1);
+  const bundle2 = await getProjectBundleItem(projTitle, 2);
+  const bundle3 = await getProjectBundleItem(projTitle, 3);
+
+  console.log("Bundle 1 Amount: " + bundle1.amount);
+  console.log("Bundle 1 Description: " + bundle1.description);
 
   res.render("project-detail", {
     projInfo: projInfo,
@@ -271,9 +278,13 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
     owner: owner,
     currUser: currUser,
     updates: updates,
+    milestones: milestones,
     tier1Funded: checkTier1Funded,
     tier2Funded: checkTier2Funded,
-    tier3Funded: checkTier3Funded
+    tier3Funded: checkTier3Funded,
+    bundle1: bundle1,
+    bundle2: bundle2,
+    bundle3: bundle3
   });
 });
 
@@ -464,6 +475,18 @@ router.post("/project-signup", loggedIn, async (req, res, next) => {
     await pool.query(complementQueryString);
   } catch (e) {}
 
+  var projCategory = req.body.projectCategory;
+  console.log("Project Category is : " + projCategory);
+  var categoryString = "INSERT INTO taggedwith(projtitle, type) VALUES ('" + projTitle + "', '" + projCategory + "')";
+  await pool.query(categoryString, err => {
+    if(err) {
+      console.log("problem adding category");
+    } else {
+      console.log("category added");
+    }
+  });
+  
+
   var tierOneAmount = req.body.tierOneAmount;
   var tierOneRewards = req.body.tierOneRewards;
   var tierTwoAmount = req.body.tierTwoAmount;
@@ -508,23 +531,164 @@ router.post("/project-signup", loggedIn, async (req, res, next) => {
       }
     }
   );
-  // try {
-  //   pool.query(queryString, [projTitle, 1, tierOneAmount, tierOneRewards]);
-  // } catch(e) {
-  // }
-
-  // try {
-  //   pool.query(queryString, [projTitle, 3, tierTwoAmount, tierTwoRewards]);
-  // } catch(e) {
-  // }
-
-  // try {
-  //   pool.query(queryString, [projTitle, 3, tierThreeAmount, tierThreeRewards]);
-  // } catch(e) {
-  // }
-
   res.redirect("/projects");
 });
+
+router.get("/access-errorr", loggedIn, async(req,res,next) => {
+  res.render("access-error")
+})
+
+router.get("/invalidproject-error", loggedIn, async(req, res, next) => {
+  res.render("invalidproject-error")
+})
+
+router.get("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
+  var projInfo = await getProjectInfo(req.params.projtitle);
+  var currUser = req.user[0].username;
+  var projOwner = await getOwner(projInfo[0].projtitle);
+  if(currUser != projOwner[0].username) {
+    res.redirect("/access-error");
+  }
+
+  res.render("project-edit", {projInfo: projInfo});
+});
+
+router.post("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
+  var projTitle = req.params.projtitle;
+  var projDesc = req.body.projectDesc;
+  var projTargetAmt = req.body.projectTargetAmt;
+  var projDeadline = req.body.projectDeadline;
+  const projTitleExists = await checkProjTitle(projTitle);
+  if (!projTitleExists) {
+    res.redirect("/invalidproject-error");
+  }
+  console.log(projDesc);
+  console.log(projTargetAmt);
+  console.log(projDeadline);
+  console.log(projTitle);
+  var queryString =
+    "UPDATE projects SET description = $1, targetamount = $2, deadline = $3 where projtitle = $4";
+  await pool.query(queryString, [projDesc, projTargetAmt, projDeadline, projTitle], err => {
+    if(err) {
+      console.log("error updating project");
+    } else {
+      console.log("updated project");
+    }
+  });
+
+  var projCategory = req.body.projectCategory;
+  console.log("Project Category is : " + projCategory);
+  var categoryString = "UPDATE  taggedwith SET type = $1 where projtitle = $2";
+  await pool.query(categoryString, [projCategory, projTitle], err => {
+    if(err) {
+      console.log("problem editing tag");
+    } else {
+      console.log("tag edited");
+    } 
+  });
+
+  var tierOneAmount = req.body.tierOneAmount;
+  var tierOneRewards = req.body.tierOneRewards;
+  var tierTwoAmount = req.body.tierTwoAmount;
+  var tierTwoRewards = req.body.tierTwoRewards;
+  var tierThreeAmount = req.body.tierThreeAmount;
+  var tierThreeRewards = req.body.tierThreeRewards;
+
+  var queryString2 =
+    "UPDATE projectbundles SET amount = $1, description = $2 where projtitle = $3 and tier = $4";
+  await pool.query(
+    queryString2,
+    [tierOneAmount, tierOneRewards, projTitle, 1],
+    err => {
+      if (err) {
+        console.log("tier one problem editing");
+      } else {
+        console.log("tier one edit ok");
+      }
+    }
+  );
+
+  await pool.query(
+    queryString2,
+    [tierTwoAmount, tierTwoRewards, projTitle, 2],
+    err => {
+      if (err) {
+        console.log("tier two problem editing");
+      } else {
+        console.log("tier two edit ok");
+      }
+    }
+  );
+
+  await pool.query(
+    queryString2,
+    [tierThreeAmount, tierThreeRewards, projTitle, 3],
+    err => {
+      if (err) {
+        console.log("tier three problem editing");
+      } else {
+        console.log("tier three edit ok");
+      }
+    }
+  );
+  
+  res.redirect("/project/"+projTitle);
+});
+
+router.get("/project/:projtitle/add-milestone", loggedIn, async (req, res, next) => {
+  var projInfo = await getProjectInfo(req.params.projtitle);
+  var currUser = req.user[0].username;
+  var projOwner = await getOwner(projInfo[0].projtitle);
+  if(currUser != projOwner[0].username) {
+    res.redirect("/access-error");
+  }
+  res.render("project-add-milestone", {projInfo: projInfo});
+});
+
+router.post("/project/:projtitle/add-milestone", loggedIn, async (req, res, next) => {
+  var projTitle = req.params.projtitle;
+  var milestoneNumber = req.body.milestoneNumber
+  var milestoneDesc = req.body.milestoneDesc;
+  var milestoneTargetAmt = req.body.milestoneTargetAmt;
+  const projTitleExists = await checkProjTitle(projTitle);
+  if (!projTitleExists) {
+    res.redirect("/invalidproject-error");
+  }
+  var milestoneExist = await checkIfMilestoneExists(projTitle, milestoneNumber);
+  if(milestoneExist) {
+    res.redirect("/milestoneexists-error")
+  }
+  var queryString = "INSERT INTO projectmilestones(projtitle, milestoneno, amount, description) VALUES ($1, $2, $3, $4)";
+  await pool.query(queryString, [projTitle, milestoneNumber, milestoneTargetAmt, milestoneDesc], err => {
+    if(err) {
+      console.log("problem adding milestone");
+    } else {
+      console.log("milestone added");
+    }
+  })
+  res.redirect("/project/" + projTitle);
+});
+
+router.get("/milestoneexists-error", loggedIn, (req,res,next) => {
+  res.render("milestoneexists-error");
+})
+
+router.get("/project/:projtitle/delete", loggedIn, async (req, res, next) => {
+  var projTitle = req.params.projtitle;
+  const results = await deleteProject(projTitle);
+  console.log("trying to delete project now");
+  if(results) {
+    console.log("project deleted")
+    res.redirect("/projects");
+  } else {
+    console.log("failed to delete project");
+    res.redirect("/project/" + projTitle);
+  }
+})
+
+
+
+
 
 // project page functions
 async function readProjects() {
@@ -650,7 +814,7 @@ async function checkIfUserLikesProject(username, projTitle) {
       projTitle +
       "'";
     const results = await pool.query(queryString);
-    console.log(results.rows);
+    // console.log(results.rows);
     if (results.rows == undefined) return false;
     return results.rows[0].username == username;
   } catch (e) {}
@@ -660,7 +824,7 @@ async function checkIfUserHasFundedTier(currentUser, projTitle, fundTier) {
   try {
     var queryString = "select * from fundings where username = $1 and projtitle = $2 and tier = $3";
     const results = await pool.query(queryString, [currentUser, projTitle, fundTier]);
-    console.log(results.rows);
+    // console.log(results.rows);
     if (results.rows == undefined) return false;
     return results.rows[0].username == currentUser  ;
   } catch (e) {}
@@ -670,10 +834,63 @@ async function getUsersWhoLike(projTitle) {
   try {
     var queryString = "select * from likes where projtitle = $1";
     const results = await pool.query(queryString, [projTitle]);
-    console.log(results.rows);
+    // console.log(results.rows);
     if (results.rows == undefined) return [];
     return results.rows;
   } catch (e) {}
+}
+
+async function checkIfMilestoneExists(projTitle, milestoneNumber) {
+  try {
+    var queryString = "select * from projectmilestones where projtitle = $1 and milestoneno = $2";
+    const results = await pool.query(queryString, [projTitle, milestoneNumber]);
+    // console.log(results.rows);
+    if (results.rows == undefined) return false;
+    return results.rows[0].projtitle = projTitle;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function getProjMilestones(projTitle) {
+  try {
+    var queryString = "select * from projectmilestones where projtitle = $1";
+    const results = await pool.query(queryString, [projTitle]);
+    // console.log(results.rows);
+    if (results.rows == undefined) return [];
+    return results.rows;
+  } catch (e) {}
+}
+
+async function getProjectBundleItem(projTitle, tier) {
+  try {
+    var queryString = "select * from projectbundles where projtitle = $1 and tier = $2";
+    // console.log("Tier is " + tier)
+    const results = await pool.query(queryString, [projTitle, tier]);
+    // console.log(results.rows);
+    if (results.rows == undefined) return [];
+    return results.rows;
+  } catch (e) {}
+}
+
+async function deleteProject(projTitle) {
+  try {
+    var queryString = "delete from owns where projtitle = $1"
+    var queryString2 = "delete from likes where projtitle = $1"
+    var queryString3 = "delete from taggedwith where projtitle = $1"
+    var queryString4 = "delete from projects where projtitle = $1"
+    
+    await pool.query(queryString, [projTitle]);
+    await pool.query(queryString2, [projTitle]);
+    await pool.query(queryString3, [projTitle]);
+    await pool.query(queryString4, [projTitle]);
+    return true;
+    
+  } catch (e) {
+    console.log("error with deleting project!");
+    console.log("Error is: " + e);
+    return false;
+  }
 }
 
 //End import part a

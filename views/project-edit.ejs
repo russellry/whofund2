@@ -11,18 +11,8 @@
   <body>
     <% include partials/base.ejs %>
     <div class="container">
-      <form id="projectSignUpForm" action="/project-signup" method="POST">
-        <div class="form-group">
-          <label for="projectTitle">Project Title</label>
-          <input
-            type="text"
-            class="form-control"
-            name="projectTitle"
-            aria-describedby="projectTitleHelp"
-            placeholder="Enter project title..."
-            required
-          />
-        </div>
+      <form id="projectEditForm" action="/project/<%=projInfo[0].projtitle%>/edit" method="POST">
+
         <div class="form-group">
           <label for="projectDesc">Description</label>
           <input
@@ -159,7 +149,7 @@
             required
           />
         </div>
-        <button type="submit" class="btn btn-primary">Register</button>
+        <button type="submit" class="btn btn-primary">Submit changes</button>
       </form>
     </div>
   </body>
