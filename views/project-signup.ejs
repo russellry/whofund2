@@ -20,6 +20,7 @@
             name="projectTitle"
             aria-describedby="projectTitleHelp"
             placeholder="Enter project title..."
+            required
           />
         </div>
         <div class="form-group">
@@ -30,7 +31,34 @@
             name="projectDesc"
             aria-describedby="projectDescHelp"
             placeholder="Enter Description..."
+            required
           />
+        </div>
+        <div class="form-group">
+          <label for="projectCategory">Category</label>
+          <select 
+            type="text"
+            class="form-control"
+            name="projectCategory"
+            aria-describedby="projectCategory"
+            placeholder="Select category.."
+            required>
+            <option value="Art">Art</option>
+            <option value="Comics">Comics</option>
+            <option value="Crafts">Crafts</option>
+            <option value="Dance">Dance</option>
+            <option value="Design">Design</option>
+            <option value="Fashion">Fashion</option>
+            <option value="Film & Video">Film & Video</option>
+            <option value="Food">Food</option>
+            <option value="Games">Games</option>
+            <option value="Journalism">Journalism</option>
+            <option value="Music">Music</option>
+            <option value="Photography">Photography</option>
+            <option value="Publishing">Publishing</option>
+            <option value="Technology">Technology</option>
+            <option value="Theater">Theater</option>
+          </select>
         </div>
         <div class="form-group">
           <label for="projectTargetAmt">Target Amount</label>
@@ -43,6 +71,7 @@
             name="projectTargetAmt"
             aria-describedby="projectTargetAmtHelp"
             placeholder="Enter Project Target Amount..."
+            required
           />
         </div>
         <div class="form-group">
@@ -52,6 +81,7 @@
             class="form-control"
             name="projectDeadline"
             aria-describedby="projectDeadlineHelp"
+            required
           />
         </div>
         <div class="form-group">
@@ -65,6 +95,7 @@
             name="tierOneAmount"
             aria-describedby="tierOneAmount"
             placeholder="Enter Tier 1 Amount..."
+            required
           />
         </div>
         <div class="form-group">
@@ -75,6 +106,7 @@
             name="tierOneRewards"
             aria-describedby="tierOneRewards"
             placeholder="Enter Tier 1 Rewards..."
+            required
           />
         </div>
         <div class="form-group">
@@ -88,6 +120,7 @@
             name="tierTwoAmount"
             aria-describedby="tierTwoAmount"
             placeholder="Enter Tier 2 Amount..."
+            required
           />
         </div>
         <div class="form-group">
@@ -98,6 +131,7 @@
             name="tierTwoRewards"
             aria-describedby="tierTwoRewards"
             placeholder="Enter Tier 2 Rewards..."
+            required
           />
         </div>
         <div class="form-group">
@@ -111,6 +145,7 @@
             name="tierThreeAmount"
             aria-describedby="tierThreeAmount"
             placeholder="Enter Tier 3 Amount..."
+            required
           />
         </div>
         <div class="form-group">
@@ -121,6 +156,7 @@
             name="tierThreeRewards"
             aria-describedby="tierThreeRewards"
             placeholder="Enter Tier 3 Rewards..."
+            required
           />
         </div>
         <button type="submit" class="btn btn-primary">Register</button>
