@@ -2,8 +2,8 @@ var localStategy = require("passport-local").Strategy;
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
-  // connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
+  // connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
+  connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
 });
 
 module.exports = function(passport) {

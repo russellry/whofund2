@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <% include partials/base.ejs %>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+          <div class="card card-signin my-5">
+            <div class="card-body">
+              <div
+                class="alert alert-primary"
+                role="alert"
+                style="text-align: center;"
+              >
+                Username already taken, try again!
+              </div>
+              <h5 class="card-title text-center">Create New Account</h5>
+              <form id="signUpForm" action="/auth/signup" method="POST">
+                <div class="form-group">
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="username"
+                    aria-describedby="usernameHelp"
+                    placeholder="Username"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <input
+                    type="password"
+                    class="form-control"
+                    name="password"
+                    placeholder="Password"
+                    required
+                  />
+                </div>
+                <button
+                  class="btn btn-lg btn-primary btn-block text-uppercase"
+                  type="submit"
+                >
+                  Register
+                </button>
+                <div style="text-align: center;">
+                  Already have an account? <a href="/login">Sign in</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
