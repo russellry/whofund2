@@ -59,7 +59,8 @@ router.get("/logout", loggedIn, function(req, res, next) {
 // get all users
 router.get("/users", loggedIn, async (req, res) => {
   const rows = await readUsers();
-  res.render("users", { data: rows });
+  const topKeyboardWarriors = await readKeyboardWarriors();
+  res.render("users", { data: rows, kb: topKeyboardWarriors });
 });
 
 // get specific user profile
@@ -157,6 +158,18 @@ router.get("/profile/:username/unfollow", loggedIn, async (req, res) => {
 async function readUsers() {
   try {
     const results = await pool.query("select * from users");
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function readKeyboardWarriors() {
+  try {
+    const results = await pool.query(
+      "select username, count(*) from ProjectFeedbacks pfb where ( select count(*) from  ProjectFeedbacks pfb2 where  pfb2.userName = pfb.userName and length(pfb2.description) >= 20) >= 2 group by userName ORDER BY count(*) DESC limit 3;"
+    );
+    console.log(results.rows);
     return results.rows;
   } catch (e) {
     return [];
