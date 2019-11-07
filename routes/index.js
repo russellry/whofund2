@@ -253,6 +253,9 @@ router.get("/my-projects", loggedIn, async (req, res) => {
 
 router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const projTitle = req.params.projtitle;
+  // projTitle = await projTitle.replace(" ", "%20");
+
+  console.log(projTitle);
   const projInfo = await getProjectInfo(projTitle);
   const totalCurrFunds = await getProjectTotalCurrentFunds(
     req.params.projtitle
@@ -448,6 +451,7 @@ router.post("/post-comments", loggedIn, async (req, res, next) => {
   curr_url = req.headers.referer;
   splitstr = curr_url.split("/");
   projTitle = splitstr[splitstr.length - 1];
+  projTitle = projTitle.replace("%20", " ");
   // var projTitle = req.body.projTitle;
   var comment = req.body.comments;
   var currentUser = req.user[0].username;

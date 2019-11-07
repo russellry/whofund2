@@ -214,16 +214,18 @@
             <h3>This project has been funded by:</h3>
             <br />
             <div class="row">
-<div class="col-4 offset-4">            <ul class="list-group">
-    <% var index = 1%> <% projFunders.forEach((item) => { %>
+              <div class="col-4 offset-4">            
+                <ul class="list-group">
+                  <% var index = 1%> <% projFunders.forEach((item) => { %>
 
-    <li
-      class="list-group-item d-flex justify-content-between align-items-center"
-    >
-      <a href="/profile/<%=item.username%>"><%=item.username %></a>
-    </li>
-    <% }); %>
-  </ul></div>
+                  <li
+                    class="list-group-item d-flex justify-content-between align-items-center"
+                  >
+                    <a href="/profile/<%=item.username%>"><%=item.username %></a>
+                  </li>
+                  <% }); %>
+                </ul>
+              </div>
             </div>
 
 
