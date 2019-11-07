@@ -5,8 +5,8 @@ var api = require("../api");
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  // connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
-  connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
+  connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
+  // connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
 });
 
 // static files
@@ -274,40 +274,13 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
   console.log(comments);
 
   const currUser = req.user[0].username;
-<<<<<<< HEAD
-  // const checkTier1Funded = await checkIfUserHasFundedTier(currUser, projTitle, 1);
-  // const checkTier2Funded = await checkIfUserHasFundedTier(currUser, projTitle, 2);
-  // const checkTier3Funded = await checkIfUserHasFundedTier(currUser, projTitle, 3);
-  
-=======
-  const checkTier1Funded = await checkIfUserHasFundedTier(
-    currUser,
-    projTitle,
-    1
-  );
-  const checkTier2Funded = await checkIfUserHasFundedTier(
-    currUser,
-    projTitle,
-    2
-  );
-  const checkTier3Funded = await checkIfUserHasFundedTier(
-    currUser,
-    projTitle,
-    3
-  );
 
->>>>>>> 15f26f719108934265c783f4d0a98e38fc763e90
+  
   const likers = await getUsersWhoLike(projTitle);
   const milestones = await getProjMilestones(projTitle);
 
   const bundles = await getAllProjectBundles(projTitle);
-
-  // const bundle1 = await getProjectBundleItem(projTitle, 1);
-  // const bundle2 = await getProjectBundleItem(projTitle, 2);
-  // const bundle3 = await getProjectBundleItem(projTitle, 3);
-
-  // console.log("Bundle 1 Amount: " + bundle1.amount);
-  // console.log("Bundle 1 Description: " + bundle1.description);
+  const tierFunding = await getFundedTiersOfProjectByUser(projTitle, currUser); // array of bool for each tier of funding for this proj
 
   res.render("project-detail", {
     projInfo: projInfo,
@@ -321,10 +294,8 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
     currUser: currUser,
     updates: updates,
     milestones: milestones,
-    // tier1Funded: checkTier1Funded,
-    // tier2Funded: checkTier2Funded,
-    // tier3Funded: checkTier3Funded,
-    bundles: bundles
+    bundles: bundles,
+    tierFunding: tierFunding
   });
 });
 
@@ -392,7 +363,6 @@ router.get("/project/:projtitle/fund/:tier", loggedIn, async (req, res) => {
   const projInfo = await getProjectInfo(projTitle);
   const projOwnerInfo = await getOwner(projTitle);
   const projOwnerName = projOwnerInfo[0].username;
-<<<<<<< HEAD
   const funded = await checkIfUserHasFundedTier(currentUser, projTitle, fundTier);
   // console.log("Funded status is: " + funded);
   if(currentUser == projOwnerName) {
@@ -403,25 +373,6 @@ router.get("/project/:projtitle/fund/:tier", loggedIn, async (req, res) => {
     var queryString = "INSERT INTO fundings (username, projtitle, tier) VALUES (";
     queryString += "'" + currentUser + "', '" + projTitle + "', '" + fundTier + "')";
     // console.log(queryString);
-=======
-  const funded = await checkIfUserHasFundedTier(
-    currentUser,
-    projTitle,
-    fundTier
-  );
-  console.log("Funded status is: " + funded);
-  if (currentUser == projOwnerName) {
-    var msg = "You cannot fund your own project!";
-  } else if (funded) {
-    var msg =
-      "You have already funded " + projTitle + " at tier " + fundTier + "!";
-  } else {
-    var queryString =
-      "INSERT INTO fundings (username, projtitle, tier) VALUES (";
-    queryString +=
-      "'" + currentUser + "', '" + projTitle + "', '" + fundTier + "')";
-    console.log(queryString);
->>>>>>> 15f26f719108934265c783f4d0a98e38fc763e90
     await pool.query(queryString, err => {
       if (err) {
         // console.log(fundTier);
@@ -628,102 +579,9 @@ router.post("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
     }
   });
 
-<<<<<<< HEAD
-  // var tierOneAmount = req.body.tierOneAmount;
-  // var tierOneRewards = req.body.tierOneRewards;
-  // var tierTwoAmount = req.body.tierTwoAmount;
-  // var tierTwoRewards = req.body.tierTwoRewards;
-  // var tierThreeAmount = req.body.tierThreeAmount;
-  // var tierThreeRewards = req.body.tierThreeRewards;
-
-  // var queryString2 =
-  //   "UPDATE projectbundles SET amount = $1, description = $2 where projtitle = $3 and tier = $4";
-  // await pool.query(
-  //   queryString2,
-  //   [tierOneAmount, tierOneRewards, projTitle, 1],
-  //   err => {
-  //     if (err) {
-  //       console.log("tier one problem editing");
-  //     } else {
-  //       console.log("tier one edit ok");
-  //     }
-  //   }
-  // );
-
-  // await pool.query(
-  //   queryString2,
-  //   [tierTwoAmount, tierTwoRewards, projTitle, 2],
-  //   err => {
-  //     if (err) {
-  //       console.log("tier two problem editing");
-  //     } else {
-  //       console.log("tier two edit ok");
-  //     }
-  //   }
-  // );
-
-  // await pool.query(
-  //   queryString2,
-  //   [tierThreeAmount, tierThreeRewards, projTitle, 3],
-  //   err => {
-  //     if (err) {
-  //       console.log("tier three problem editing");
-  //     } else {
-  //       console.log("tier three edit ok");
-  //     }
-  //   }
-  // );
+  
   
   res.redirect("/project/"+projTitle);
-});
-=======
-  var tierOneAmount = req.body.tierOneAmount;
-  var tierOneRewards = req.body.tierOneRewards;
-  var tierTwoAmount = req.body.tierTwoAmount;
-  var tierTwoRewards = req.body.tierTwoRewards;
-  var tierThreeAmount = req.body.tierThreeAmount;
-  var tierThreeRewards = req.body.tierThreeRewards;
-
-  var queryString2 =
-    "UPDATE projectbundles SET amount = $1, description = $2 where projtitle = $3 and tier = $4";
-  await pool.query(
-    queryString2,
-    [tierOneAmount, tierOneRewards, projTitle, 1],
-    err => {
-      if (err) {
-        console.log("tier one problem editing");
-      } else {
-        console.log("tier one edit ok");
-      }
-    }
-  );
-
-  await pool.query(
-    queryString2,
-    [tierTwoAmount, tierTwoRewards, projTitle, 2],
-    err => {
-      if (err) {
-        console.log("tier two problem editing");
-      } else {
-        console.log("tier two edit ok");
-      }
-    }
-  );
-
-  await pool.query(
-    queryString2,
-    [tierThreeAmount, tierThreeRewards, projTitle, 3],
-    err => {
-      if (err) {
-        console.log("tier three problem editing");
-      } else {
-        console.log("tier three edit ok");
-      }
-    }
-  );
->>>>>>> 15f26f719108934265c783f4d0a98e38fc763e90
-
-  res.redirect("/project/" + projTitle);
 });
 
 router.get(
@@ -833,7 +691,6 @@ router.get("/project/:projtitle/delete", loggedIn, async (req, res, next) => {
     console.log("failed to delete project");
     res.redirect("/project/" + projTitle);
   }
-<<<<<<< HEAD
 })
 
 
@@ -848,9 +705,6 @@ async function checkIfBundleExists(projTitle, bundleTierNumber) {
     return false;
   }
 }
-=======
-});
->>>>>>> 15f26f719108934265c783f4d0a98e38fc763e90
 
 // project page functions
 async function readProjects() {
@@ -1051,6 +905,21 @@ async function getProjectBundleItem(projTitle, tier) {
     if (results.rows == undefined) return [];
     return results.rows;
   } catch (e) {}
+}
+
+async function getFundedTiersOfProjectByUser(projTitle, currUser) {
+  const arr = [];
+  try {
+    var queryString =
+      "select * from fundings where projtitle = $1 and username = $2";
+    const results = await pool.query(queryString, [projTitle, currUser]);
+    console.log(results.rows);
+    if (results.rows == undefined) return [];
+    results.rows.forEach((item) => {
+      arr.push(item.tier);
+    })
+    return arr;
+  } catch (e) { return []; }
 }
 
 async function deleteProject(projTitle) {
