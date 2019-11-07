@@ -63,10 +63,10 @@
               Number of projects liked: <%= likes.length %>
             </li>
             <li class="list-group-item">
-              Following <%= following.length%> user(s)
+              Following <a href="/profile/<%=userinfo[0].username%>/following"><%= following.length%> user(s)</a>
             </li>
             <li class="list-group-item">
-              Followed by <%= followed.length%> user(s)
+              Followed by <a href="/profile/<%=userinfo[0].username%>/followers"><%= followed.length%> user(s)</a>
             </li>
           </ul>
         </div>

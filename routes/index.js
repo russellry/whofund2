@@ -160,6 +160,23 @@ router.get("/profile/:username/unfollow", loggedIn, async (req, res) => {
   res.render("followResult", { userinfo: userinfo, msg: msg });
 });
 
+router.get("/profile/:username/followers", loggedIn, async (req,res) => {
+  const userinfo = await getUserInfo(req.params.username);
+  const results = await getUserFollowed(req.params.username);
+
+  res.render("followers", {followers: results, userinfo: userinfo });
+});
+
+router.get("/profile/:username/following", loggedIn, async (req,res) => {
+  const userinfo = await getUserInfo(req.params.username);
+  const results = await getUserFollows(req.params.username);
+
+  console.log(results);
+  
+  res.render("followees", {followees: results, userinfo: userinfo });
+});
+
+
 // user page functions
 async function readUsers() {
   try {
