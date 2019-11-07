@@ -5,8 +5,8 @@ var api = require("../api");
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
-  // connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
+  // connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
+  connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
 });
 
 // static files
@@ -39,6 +39,10 @@ router.get("/login", loggedOut, function(req, res, next) {
   res.render("login");
 });
 
+router.get("/login-userexists", loggedOut, function(req, res, next) {
+  res.render("login-userexists");
+});
+
 router.get("/signup", loggedOut, function(req, res, next) {
   res.render("signup");
 });
@@ -55,7 +59,8 @@ router.get("/logout", loggedIn, function(req, res, next) {
 // get all users
 router.get("/users", loggedIn, async (req, res) => {
   const rows = await readUsers();
-  res.render("users", { data: rows });
+  const topKeyboardWarriors = await readKeyboardWarriors();
+  res.render("users", { data: rows, kb: topKeyboardWarriors });
 });
 
 // get specific user profile
@@ -94,7 +99,7 @@ router.get("/profile/:username/follow", loggedIn, async (req, res) => {
 
   if (isFollowing) {
     var msg = "Already following " + toFollowUser + "!";
-  } else if(currentUser == toFollowUser) {
+  } else if (currentUser == toFollowUser) {
     var msg = "Cannot follow yourself!";
   } else {
     var queryString =
@@ -153,6 +158,18 @@ router.get("/profile/:username/unfollow", loggedIn, async (req, res) => {
 async function readUsers() {
   try {
     const results = await pool.query("select * from users");
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function readKeyboardWarriors() {
+  try {
+    const results = await pool.query(
+      "select username, count(*) from ProjectFeedbacks pfb where ( select count(*) from  ProjectFeedbacks pfb2 where  pfb2.userName = pfb.userName and length(pfb2.description) >= 20) >= 2 group by userName ORDER BY count(*) DESC limit 3;"
+    );
+    console.log(results.rows);
     return results.rows;
   } catch (e) {
     return [];
@@ -236,6 +253,9 @@ router.get("/my-projects", loggedIn, async (req, res) => {
 
 router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const projTitle = req.params.projtitle;
+  // projTitle = await projTitle.replace(" ", "%20");
+
+  console.log(projTitle);
   const projInfo = await getProjectInfo(projTitle);
   const totalCurrFunds = await getProjectTotalCurrentFunds(
     req.params.projtitle
@@ -254,10 +274,29 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
   console.log(comments);
 
   const currUser = req.user[0].username;
+<<<<<<< HEAD
   // const checkTier1Funded = await checkIfUserHasFundedTier(currUser, projTitle, 1);
   // const checkTier2Funded = await checkIfUserHasFundedTier(currUser, projTitle, 2);
   // const checkTier3Funded = await checkIfUserHasFundedTier(currUser, projTitle, 3);
   
+=======
+  const checkTier1Funded = await checkIfUserHasFundedTier(
+    currUser,
+    projTitle,
+    1
+  );
+  const checkTier2Funded = await checkIfUserHasFundedTier(
+    currUser,
+    projTitle,
+    2
+  );
+  const checkTier3Funded = await checkIfUserHasFundedTier(
+    currUser,
+    projTitle,
+    3
+  );
+
+>>>>>>> 15f26f719108934265c783f4d0a98e38fc763e90
   const likers = await getUsersWhoLike(projTitle);
   const milestones = await getProjMilestones(projTitle);
 
@@ -344,7 +383,7 @@ router.get("/project/:projtitle/unlike", loggedIn, async (req, res) => {
   });
 });
 
-// funding by users 
+// funding by users
 router.get("/project/:projtitle/fund/:tier", loggedIn, async (req, res) => {
   var currentUser = req.user[0].username;
   var projTitle = req.params.projtitle;
@@ -353,6 +392,7 @@ router.get("/project/:projtitle/fund/:tier", loggedIn, async (req, res) => {
   const projInfo = await getProjectInfo(projTitle);
   const projOwnerInfo = await getOwner(projTitle);
   const projOwnerName = projOwnerInfo[0].username;
+<<<<<<< HEAD
   const funded = await checkIfUserHasFundedTier(currentUser, projTitle, fundTier);
   // console.log("Funded status is: " + funded);
   if(currentUser == projOwnerName) {
@@ -363,6 +403,25 @@ router.get("/project/:projtitle/fund/:tier", loggedIn, async (req, res) => {
     var queryString = "INSERT INTO fundings (username, projtitle, tier) VALUES (";
     queryString += "'" + currentUser + "', '" + projTitle + "', '" + fundTier + "')";
     // console.log(queryString);
+=======
+  const funded = await checkIfUserHasFundedTier(
+    currentUser,
+    projTitle,
+    fundTier
+  );
+  console.log("Funded status is: " + funded);
+  if (currentUser == projOwnerName) {
+    var msg = "You cannot fund your own project!";
+  } else if (funded) {
+    var msg =
+      "You have already funded " + projTitle + " at tier " + fundTier + "!";
+  } else {
+    var queryString =
+      "INSERT INTO fundings (username, projtitle, tier) VALUES (";
+    queryString +=
+      "'" + currentUser + "', '" + projTitle + "', '" + fundTier + "')";
+    console.log(queryString);
+>>>>>>> 15f26f719108934265c783f4d0a98e38fc763e90
     await pool.query(queryString, err => {
       if (err) {
         // console.log(fundTier);
@@ -413,6 +472,7 @@ router.post("/post-comments", loggedIn, async (req, res, next) => {
   curr_url = req.headers.referer;
   splitstr = curr_url.split("/");
   projTitle = splitstr[splitstr.length - 1];
+  projTitle = projTitle.replace("%20", " ");
   // var projTitle = req.body.projTitle;
   var comment = req.body.comments;
   var currentUser = req.user[0].username;
@@ -478,15 +538,19 @@ router.post("/project-signup", loggedIn, async (req, res, next) => {
 
   var projCategory = req.body.projectCategory;
   console.log("Project Category is : " + projCategory);
-  var categoryString = "INSERT INTO taggedwith(projtitle, type) VALUES ('" + projTitle + "', '" + projCategory + "')";
+  var categoryString =
+    "INSERT INTO taggedwith(projtitle, type) VALUES ('" +
+    projTitle +
+    "', '" +
+    projCategory +
+    "')";
   await pool.query(categoryString, err => {
-    if(err) {
+    if (err) {
       console.log("problem adding category");
     } else {
       console.log("category added");
     }
   });
-  
 
   var tierOneAmount = req.body.tierOneAmount;
   var tierOneRewards = req.body.tierOneRewards;
@@ -507,23 +571,23 @@ router.post("/project-signup", loggedIn, async (req, res, next) => {
   res.redirect("/projects");
 });
 
-router.get("/access-errorr", loggedIn, async(req,res,next) => {
-  res.render("access-error")
-})
+router.get("/access-errorr", loggedIn, async (req, res, next) => {
+  res.render("access-error");
+});
 
-router.get("/invalidproject-error", loggedIn, async(req, res, next) => {
-  res.render("invalidproject-error")
-})
+router.get("/invalidproject-error", loggedIn, async (req, res, next) => {
+  res.render("invalidproject-error");
+});
 
 router.get("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
   var projInfo = await getProjectInfo(req.params.projtitle);
   var currUser = req.user[0].username;
   var projOwner = await getOwner(projInfo[0].projtitle);
-  if(currUser != projOwner[0].username) {
+  if (currUser != projOwner[0].username) {
     res.redirect("/access-error");
   }
 
-  res.render("project-edit", {projInfo: projInfo});
+  res.render("project-edit", { projInfo: projInfo });
 });
 
 router.post("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
@@ -541,25 +605,30 @@ router.post("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
   console.log(projTitle);
   var queryString =
     "UPDATE projects SET description = $1, targetamount = $2, deadline = $3 where projtitle = $4";
-  await pool.query(queryString, [projDesc, projTargetAmt, projDeadline, projTitle], err => {
-    if(err) {
-      console.log("error updating project");
-    } else {
-      console.log("updated project");
+  await pool.query(
+    queryString,
+    [projDesc, projTargetAmt, projDeadline, projTitle],
+    err => {
+      if (err) {
+        console.log("error updating project");
+      } else {
+        console.log("updated project");
+      }
     }
-  });
+  );
 
   var projCategory = req.body.projectCategory;
   console.log("Project Category is : " + projCategory);
   var categoryString = "UPDATE  taggedwith SET type = $1 where projtitle = $2";
   await pool.query(categoryString, [projCategory, projTitle], err => {
-    if(err) {
+    if (err) {
       console.log("problem editing tag");
     } else {
       console.log("tag edited");
-    } 
+    }
   });
 
+<<<<<<< HEAD
   // var tierOneAmount = req.body.tierOneAmount;
   // var tierOneRewards = req.body.tierOneRewards;
   // var tierTwoAmount = req.body.tierTwoAmount;
@@ -607,44 +676,109 @@ router.post("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
   
   res.redirect("/project/"+projTitle);
 });
+=======
+  var tierOneAmount = req.body.tierOneAmount;
+  var tierOneRewards = req.body.tierOneRewards;
+  var tierTwoAmount = req.body.tierTwoAmount;
+  var tierTwoRewards = req.body.tierTwoRewards;
+  var tierThreeAmount = req.body.tierThreeAmount;
+  var tierThreeRewards = req.body.tierThreeRewards;
 
-router.get("/project/:projtitle/add-milestone", loggedIn, async (req, res, next) => {
-  var projInfo = await getProjectInfo(req.params.projtitle);
-  var currUser = req.user[0].username;
-  var projOwner = await getOwner(projInfo[0].projtitle);
-  if(currUser != projOwner[0].username) {
-    res.redirect("/access-error");
-  }
-  res.render("project-add-milestone", {projInfo: projInfo});
-});
-
-router.post("/project/:projtitle/add-milestone", loggedIn, async (req, res, next) => {
-  var projTitle = req.params.projtitle;
-  var milestoneNumber = req.body.milestoneNumber
-  var milestoneDesc = req.body.milestoneDesc;
-  var milestoneTargetAmt = req.body.milestoneTargetAmt;
-  const projTitleExists = await checkProjTitle(projTitle);
-  if (!projTitleExists) {
-    res.redirect("/invalidproject-error");
-  }
-  var milestoneExist = await checkIfMilestoneExists(projTitle, milestoneNumber);
-  if(milestoneExist) {
-    res.redirect("/milestoneexists-error")
-  }
-  var queryString = "INSERT INTO projectmilestones(projtitle, milestoneno, amount, description) VALUES ($1, $2, $3, $4)";
-  await pool.query(queryString, [projTitle, milestoneNumber, milestoneTargetAmt, milestoneDesc], err => {
-    if(err) {
-      console.log("problem adding milestone");
-    } else {
-      console.log("milestone added");
+  var queryString2 =
+    "UPDATE projectbundles SET amount = $1, description = $2 where projtitle = $3 and tier = $4";
+  await pool.query(
+    queryString2,
+    [tierOneAmount, tierOneRewards, projTitle, 1],
+    err => {
+      if (err) {
+        console.log("tier one problem editing");
+      } else {
+        console.log("tier one edit ok");
+      }
     }
-  })
+  );
+
+  await pool.query(
+    queryString2,
+    [tierTwoAmount, tierTwoRewards, projTitle, 2],
+    err => {
+      if (err) {
+        console.log("tier two problem editing");
+      } else {
+        console.log("tier two edit ok");
+      }
+    }
+  );
+
+  await pool.query(
+    queryString2,
+    [tierThreeAmount, tierThreeRewards, projTitle, 3],
+    err => {
+      if (err) {
+        console.log("tier three problem editing");
+      } else {
+        console.log("tier three edit ok");
+      }
+    }
+  );
+>>>>>>> 15f26f719108934265c783f4d0a98e38fc763e90
+
   res.redirect("/project/" + projTitle);
 });
 
-router.get("/milestoneexists-error", loggedIn, (req,res,next) => {
+router.get(
+  "/project/:projtitle/add-milestone",
+  loggedIn,
+  async (req, res, next) => {
+    var projInfo = await getProjectInfo(req.params.projtitle);
+    var currUser = req.user[0].username;
+    var projOwner = await getOwner(projInfo[0].projtitle);
+    if (currUser != projOwner[0].username) {
+      res.redirect("/access-error");
+    }
+    res.render("project-add-milestone", { projInfo: projInfo });
+  }
+);
+
+router.post(
+  "/project/:projtitle/add-milestone",
+  loggedIn,
+  async (req, res, next) => {
+    var projTitle = req.params.projtitle;
+    var milestoneNumber = req.body.milestoneNumber;
+    var milestoneDesc = req.body.milestoneDesc;
+    var milestoneTargetAmt = req.body.milestoneTargetAmt;
+    const projTitleExists = await checkProjTitle(projTitle);
+    if (!projTitleExists) {
+      res.redirect("/invalidproject-error");
+    }
+    var milestoneExist = await checkIfMilestoneExists(
+      projTitle,
+      milestoneNumber
+    );
+    if (milestoneExist) {
+      res.redirect("/milestoneexists-error");
+    }
+    var queryString =
+      "INSERT INTO projectmilestones(projtitle, milestoneno, amount, description) VALUES ($1, $2, $3, $4)";
+    await pool.query(
+      queryString,
+      [projTitle, milestoneNumber, milestoneTargetAmt, milestoneDesc],
+      err => {
+        if (err) {
+          console.log("problem adding milestone");
+        } else {
+          console.log("milestone added");
+        }
+      }
+    );
+    res.redirect("/project/" + projTitle);
+  }
+);
+
+router.get("/milestoneexists-error", loggedIn, (req, res, next) => {
   res.render("milestoneexists-error");
-})
+});
 
 router.get("/project/:projtitle/add-bundle", loggedIn, async (req, res, next) => {
   var projInfo = await getProjectInfo(req.params.projtitle);
@@ -692,13 +826,14 @@ router.get("/project/:projtitle/delete", loggedIn, async (req, res, next) => {
   var projTitle = req.params.projtitle;
   const results = await deleteProject(projTitle);
   console.log("trying to delete project now");
-  if(results) {
-    console.log("project deleted")
+  if (results) {
+    console.log("project deleted");
     res.redirect("/projects");
   } else {
     console.log("failed to delete project");
     res.redirect("/project/" + projTitle);
   }
+<<<<<<< HEAD
 })
 
 
@@ -713,6 +848,9 @@ async function checkIfBundleExists(projTitle, bundleTierNumber) {
     return false;
   }
 }
+=======
+});
+>>>>>>> 15f26f719108934265c783f4d0a98e38fc763e90
 
 // project page functions
 async function readProjects() {
@@ -762,7 +900,8 @@ async function getProjectInfo(projTitle) {
 
 async function getOwner(projTitle) {
   try {
-    var queryString = "select username from owns where projtitle = '" + projTitle + "'";
+    var queryString =
+      "select username from owns where projtitle = '" + projTitle + "'";
     const results = await pool.query(queryString);
     return results.rows;
   } catch (e) {
@@ -846,11 +985,16 @@ async function checkIfUserLikesProject(username, projTitle) {
 
 async function checkIfUserHasFundedTier(currentUser, projTitle, fundTier) {
   try {
-    var queryString = "select * from fundings where username = $1 and projtitle = $2 and tier = $3";
-    const results = await pool.query(queryString, [currentUser, projTitle, fundTier]);
+    var queryString =
+      "select * from fundings where username = $1 and projtitle = $2 and tier = $3";
+    const results = await pool.query(queryString, [
+      currentUser,
+      projTitle,
+      fundTier
+    ]);
     // console.log(results.rows);
     if (results.rows == undefined) return false;
-    return results.rows[0].username == currentUser  ;
+    return results.rows[0].username == currentUser;
   } catch (e) {}
 }
 
@@ -866,11 +1010,12 @@ async function getUsersWhoLike(projTitle) {
 
 async function checkIfMilestoneExists(projTitle, milestoneNumber) {
   try {
-    var queryString = "select * from projectmilestones where projtitle = $1 and milestoneno = $2";
+    var queryString =
+      "select * from projectmilestones where projtitle = $1 and milestoneno = $2";
     const results = await pool.query(queryString, [projTitle, milestoneNumber]);
     // console.log(results.rows);
     if (results.rows == undefined) return false;
-    return results.rows[0].projtitle = projTitle;
+    return (results.rows[0].projtitle = projTitle);
   } catch (e) {
     return false;
   }
@@ -898,7 +1043,8 @@ async function getAllProjectBundles(projTitle) {
 
 async function getProjectBundleItem(projTitle, tier) {
   try {
-    var queryString = "select * from projectbundles where projtitle = $1 and tier = $2";
+    var queryString =
+      "select * from projectbundles where projtitle = $1 and tier = $2";
     // console.log("Tier is " + tier)
     const results = await pool.query(queryString, [projTitle, tier]);
     // console.log(results.rows);
@@ -909,17 +1055,16 @@ async function getProjectBundleItem(projTitle, tier) {
 
 async function deleteProject(projTitle) {
   try {
-    var queryString = "delete from owns where projtitle = $1"
-    var queryString2 = "delete from likes where projtitle = $1"
-    var queryString3 = "delete from taggedwith where projtitle = $1"
-    var queryString4 = "delete from projects where projtitle = $1"
-    
+    var queryString = "delete from owns where projtitle = $1";
+    var queryString2 = "delete from likes where projtitle = $1";
+    var queryString3 = "delete from taggedwith where projtitle = $1";
+    var queryString4 = "delete from projects where projtitle = $1";
+
     await pool.query(queryString, [projTitle]);
     await pool.query(queryString2, [projTitle]);
     await pool.query(queryString3, [projTitle]);
     await pool.query(queryString4, [projTitle]);
     return true;
-    
   } catch (e) {
     console.log("error with deleting project!");
     console.log("Error is: " + e);

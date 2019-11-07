@@ -41,8 +41,8 @@
         <!--Content-->
         <div class="col-10 offset-1">
           <div class="container-fluid">
-            <br />
             <h1><%=projInfo[0].projtitle%></h1>
+
             <% if(owner[0].username == currUser) { %>
               <button data-toggle="collapse" data-target="#demo">Update Project</button>
             </br><div id="demo" class="collapse"></br>
@@ -94,17 +94,44 @@
                 </button>
               
               <%}%>
+              <div class="row">
+                  <div class="col-6">
+                      <ul class="list-group">
+                          <% var index = 1%> <% updates.forEach((item) => { %>
+                          <li
+                            class="list-group-item align-items-center"
+                          >            <h4>Update #<%=index%></h4>
 
-              <ul class="list-group">
-                  <% var index = 1%> <% updates.forEach((item) => { %>
+                            <p></p><%=item.description %></p>
+                            <% index += 1 %>
+                          </li>
+                          <% }); %>
+                        </ul>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                              <h4>Date created: </h4><%=projInfo[0].datecreated%>
+                            </li>
+                            <li class="list-group-item">
+                              <h4>Description: </h4><%=projInfo[0].description%>
+                            </li>
+                            <li class="list-group-item">
+                              <h4>Target Amount: </h4>$<%=projInfo[0].targetamount%>
+                            </li>
+                            <li class="list-group-item">
+                              <h4>Deadline: </h4><%= projInfo[0].deadline%>
+                            </li>
+                            <li class="list-group-item">
+                              <h4>Owned by: </h4><%= owner[0].username%>
+                            </li>
+                          </ul>
+                    </div>
+                    <div class="col-6">
     
-                  <li
-                    class="list-group-item d-flex justify-content-between align-items-center"
-                  >
-                    <p><%=item.description %></p>
-                    <span class="badge badge-primary badge-pill"><%=index %></span>
-                    <% index += 1 %>
+                <ul class="list-group">
+                  <li class="list-group-item">
+                    Liked by <%=likers.length%> user(s)
                   </li>
+<<<<<<< HEAD
                   <% }); %>
                 </ul>
 
@@ -167,22 +194,90 @@
 
             <% }); %>
 
+=======
+                  <li class="list-group-item">
+                    Funded by 
+                    <% if(likers.length) { %>
+                      <%=projFunders.length%> 
+                    <% } else { %>
+                      0
+                    <% } %>
+                    
+                    user(s)
+                  </li>
+                  <li class="list-group-item">
+                    Current Funded Amount: $<%= totalCurrFunds %>
+                  </li>
+                  <li class="list-group-item">
+                    <% if(targetHit) { %>
+                    <a>Target Amount Reached</a>
+                    <% } else { %>
+                    <a>Target Amount Not Reached Yet</a>
+                  </li>
+    
+                 <br>
+                 <h3>Funding rewards:</h3>
+                 <p>Tier 1: <%=bundle1[0].description%></p> 
+                 <br>
+                 <p>Tier 2: <%=bundle2[0].description%></p> 
+                 <br>
+                 <p>Tier 3: <%=bundle3[0].description%></p> 
+                 <br>
+    
+                  <% if(!targetHit && owner[0].username != currUser) { %>
+                    <% if(!tier1Funded) { %>
+                      <button class="btn btn-primary" type="button">
+                        <a
+                          href="/project/<%=projInfo[0].projtitle%>/fund/1"
+                          style="color:white"
+                          >Fund Tier 1 ($<%=bundle1[0].amount %>)</a
+                        >
+                      </button>
+                    <% } %>
+                    </br>
+                    <% if(!tier2Funded) { %>
+                      <button class="btn btn-primary" type="button">
+                        <a
+                          href="/project/<%=projInfo[0].projtitle%>/fund/2"
+                          style="color:white"
+                          >Fund Tier 2 ($<%=bundle2[0].amount %>)</a
+                        >
+                      </button>
+                    <% } %>
+                  </br>
+
+                    <% if(!tier3Funded) { %>
+                      <button class="btn btn-primary" type="button">
+                        <a
+                          href="/project/<%=projInfo[0].projtitle%>/fund/3"
+                          style="color:white"
+                          >Fund Tier 3 ($<%=bundle3[0].amount %>)</a
+                        >
+                      </button>
+                    <% } %>
+                        
+    
+                  <% } %>
+                </ul>
+    
+                <% } %>
+              </div>
+              </div>
+
+>>>>>>> 15f26f719108934265c783f4d0a98e38fc763e90
             <br />
 
-            <h3>This project has the following milestones:</h3>
+            <h3>Project Milestones:</h3>
             <br />
             <ul class="list-group">
               <% var i = 1%> <% milestones.forEach((item) => { %>
 
               <li
-                class="list-group-item d-flex justify-content-between align-items-center"
+                class="list-group-item align-items-center"
               >
-                <p>Milestone Number: <%=item.milestoneno %></p>
-                <br>
-                <p>Milestone Target Amount: <%=item.amount%></p>
-                <br>
-                <p>Milestone Rewards: <%=item.description%></p>
-                <span class="badge badge-primary badge-pill"><%=i %></span>
+                <p>Milestone #<%=item.milestoneno %> -- Target Amount: $<%=item.amount%></p>
+                <h5>Milestone Rewards: </h5>
+                <p><%=item.description%></p>
                 <% i += 1 %>
               </li>
               <% }); %>
@@ -191,18 +286,21 @@
 
             <h3>This project has been funded by:</h3>
             <br />
-            <ul class="list-group">
-              <% var index = 1%> <% projFunders.forEach((item) => { %>
+            <div class="row">
+              <div class="col-4 offset-4">            
+                <ul class="list-group">
+                  <% var index = 1%> <% projFunders.forEach((item) => { %>
 
-              <li
-                class="list-group-item d-flex justify-content-between align-items-center"
-              >
-                <a href="/profile/<%=item.username%>"><%=item.username %></a>
-                <span class="badge badge-primary badge-pill"><%=index %></span>
-                <% index += 1 %>
-              </li>
-              <% }); %>
-            </ul>
+                  <li
+                    class="list-group-item d-flex justify-content-between align-items-center"
+                  >
+                    <a href="/profile/<%=item.username%>"><%=item.username %></a>
+                  </li>
+                  <% }); %>
+                </ul>
+              </div>
+            </div>
+
 
             <% if(isLiked) { %>
             <button class="btn btn-primary" type="button">
