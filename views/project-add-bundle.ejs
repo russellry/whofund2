@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <% include partials/base.ejs %>
+    <div class="container">
+      <form id="bundleTierForm" action="/project/<%=projInfo[0].projtitle%>/add-bundle" method="POST">
+        <div class="form-group">
+          <label for="bundleTierNumber">Bundle Tier Number</label>
+          <input
+            type="text"
+            min="1"
+            max="20"
+            step="1"
+            class="form-control"
+            name="bundleTierNumber"
+            aria-describedby="bundleTierNumberHelp"
+            placeholder="Enter Bundle Tier Number..."
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="bundleTierDesc">Bundle Tier Rewards Description</label>
+          <input
+            type="text"
+            class="form-control"
+            name="bundleTierDesc"
+            aria-describedby="bundleTierDescHelp"
+            placeholder="Enter Bundle Tier Description..."
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="bundleTierFundAmt">Bundle Tier Funding Amount</label>
+          <input
+            type="number"
+            min="0.00"
+            max="10000.00"
+            step="0.01"
+            class="form-control"
+            name="bundleTierFundAmt"
+            aria-describedby="bundleTierFundAmtHelp"
+            placeholder="Enter Bundle Tier Funding Amount..."
+            required
+          />
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Add Bundle</button>
+      </form>
+    </div>
+  </body>
+</html>

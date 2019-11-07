@@ -71,6 +71,14 @@
 
               <button class="btn btn-primary" type="button">
                 <a
+                  href="/project/<%=projInfo[0].projtitle%>/add-bundle"
+                  style="color:white"
+                  >Add New Bundle</a
+                >
+              </button>
+
+              <button class="btn btn-primary" type="button">
+                <a
                   href="/project/<%=projInfo[0].projtitle%>/add-milestone"
                   style="color:white"
                   >Add Milestone</a
@@ -143,50 +151,27 @@
               </li>
 
              <br>
-             <h3>Funding rewards:</h3>
-             <p>Tier 1: <%=bundle1[0].description%></p> 
-             <br>
-             <p>Tier 2: <%=bundle2[0].description%></p> 
-             <br>
-             <p>Tier 3: <%=bundle3[0].description%></p> 
-             <br>
 
-              <% if(!targetHit && owner[0].username != currUser) { %>
-                <% if(!tier1Funded) { %>
-                  <button class="btn btn-primary" type="button">
-                    <a
-                      href="/project/<%=projInfo[0].projtitle%>/fund/1"
-                      style="color:white"
-                      >Fund Tier 1 ($<%=bundle1[0].amount %>)</a
-                    >
-                  </button>
-                <% } %>
-                
-                <% if(!tier2Funded) { %>
-                  <button class="btn btn-primary" type="button">
-                    <a
-                      href="/project/<%=projInfo[0].projtitle%>/fund/2"
-                      style="color:white"
-                      >Fund Tier 2 ($<%=bundle2[0].amount %>)</a
-                    >
-                  </button>
-                <% } %>
-              
-                <% if(!tier3Funded) { %>
-                  <button class="btn btn-primary" type="button">
-                    <a
-                      href="/project/<%=projInfo[0].projtitle%>/fund/3"
-                      style="color:white"
-                      >Fund Tier 3 ($<%=bundle3[0].amount %>)</a
-                    >
-                  </button>
-                <% } %>
-                    
-
-              <% } %>
             </ul>
 
-            <% } %>
+                <% } %>
+            <h3>Funding rewards:</h3>
+            <% bundles.forEach((item) => { %>
+              <p>Tier <%= item.tier%> Amount: $<%=item.amount%></p>
+              <p>Rewards: <%=item.description%></p>
+              <% if(!targetHit && owner[0].username != currUser) { %>
+                <button class="btn btn-primary" type="button">
+                  <a
+                    href="/project/<%=projInfo[0].projtitle%>/fund/<%=item.tier%>"
+                    style="color:white"
+                    >Fund Tier <%=item.tier%> ($<%=item.amount%>)</a
+                  >
+                </button>
+                <br><br><br>
+              <% } %>
+
+            <% }); %>
+
             <br />
 
             <h3>This project has the following milestones:</h3>
