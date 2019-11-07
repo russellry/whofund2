@@ -85,6 +85,12 @@ router.get("/profile/:username", loggedIn, async (req, res) => {
   });
 });
 
+router.get("/my-profile", loggedIn, async(req,res) => {
+  var currUser = req.user[0].username;
+  console.log("current user is :" + currUser);
+  res.redirect("/profile/" + currUser);
+})
+
 // follow/unfollow
 router.get("/profile/:username/follow", loggedIn, async (req, res) => {
   const userinfo = await getUserInfo(req.params.username);
@@ -423,7 +429,7 @@ router.post("/post-comments", loggedIn, async (req, res, next) => {
   curr_url = req.headers.referer;
   splitstr = curr_url.split("/");
   projTitle = splitstr[splitstr.length - 1];
-  projTitle = projTitle.replace("%20", " ");
+  projTitle = projTitle.replace(/%20/g, " ");
   // var projTitle = req.body.projTitle;
   var comment = req.body.comments;
   var currentUser = req.user[0].username;
