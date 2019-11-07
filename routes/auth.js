@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express.Router();
 var api = require("../api/index");
+var crypto = require("crypto");
 const { Pool } = require("pg");
 
 const pool = new Pool({
@@ -10,20 +11,23 @@ const pool = new Pool({
 
 module.exports = function(passport) {
   /* GET home page. */
-  router.post("/signup", function(req, res) {
+  router.post("/signup", async function(req, res) {
     var body = req.body;
-    var username = body.username,
-      password = body.password;
+    var username = body.username
+    var hashedPassword = await crypto.createHash('sha256').update(body.password).digest('hex').toUpperCase();
+    console.log("hashed pw = " + hashedPassword);
     var queryString =
       "INSERT INTO users (username, password, joineddate) VALUES(";
     var todayDate = api.getDateNow();
     queryString +=
-      "'" + username + "', '" + password + "', '" + todayDate + "')";
+      "'" + username + "', '" + hashedPassword.toString() + "', '" + todayDate + "')";
     console.log(queryString);
     try {
-      pool.query(queryString, (err, result) => {
+      pool.query(queryString, async (err, result) => {
         if (result) {
           console.log("user creaated");
+          // const queryres = await pool.query("select * from users where username = '" + username + "'");
+          // console.log("actual stored pw = " + queryres.rows[0].password);
           res.redirect("/login");
         } else {
           res.redirect("/login-userexists");

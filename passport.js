@@ -1,4 +1,5 @@
 var localStategy = require("passport-local").Strategy;
+var crypto = require("crypto");
 const { Pool } = require("pg");
 
 const pool = new Pool({
@@ -15,33 +16,31 @@ module.exports = function(passport) {
   });
 
   passport.use(
-    new localStategy(function(username, password, done) {
+    new localStategy(async function(username, password, done) {
       console.log(username, password);
+      var enteredPassword = crypto.createHash('sha256').update(password).digest('hex').toUpperCase();
       var loginQuery =
-        "Select * from users u where " +
-        "'" +
-        username +
-        "' = u.username and u.password = '" +
-        password +
-        "'";
+        "Select * from users where username = '" + username + "' and password = '" + enteredPassword + "'";
+      
       console.log(loginQuery);
+
       try {
-        pool.query(loginQuery, (err, results) => {
-          if (results.rows[0] != undefined) {
-            return done(null, [
-              {
-                username: results.rows[0].username,
-                password: results.rows[0].password
-              }
-            ]);
-          } else {
-            return done(null, false);
-          }
-        });
+        const results = await pool.query(loginQuery);
+        if(results.rows[0] != undefined) {
+          // console.log("stored password is: " + results.rows[0].password);
+          return done(null, [
+            {
+              username: results.rows[0].username,
+              password: results.rows[0].password
+            }
+          ]);
+        } else {
+          return done(null, false)
+        }
       } catch (e) {
         console.log(e);
         return done(null, false);
       }
     })
   );
-};
+}
