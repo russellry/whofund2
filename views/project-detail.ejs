@@ -132,16 +132,11 @@
               </li>
               <li class="list-group-item">
                 Funded by 
-                <% if(likers.length) { %>
                   <%=projFunders.length%> 
-                <% } else { %>
-                  0
-                <% } %>
-                
                 user(s)
               </li>
               <li class="list-group-item">
-                Current Funded Amount: $<%= totalCurrFunds %>
+                Current Funded Amount: $<%= totalCurrFunds || 0%>
               </li>
               <li class="list-group-item">
                 <% if(targetHit) { %>
