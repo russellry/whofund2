@@ -288,6 +288,8 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const bundles = await getAllProjectBundles(projTitle);
   const tierFunding = await getFundedTiersOfProjectByUser(projTitle, currUser); // array of bool for each tier of funding for this proj
 
+  const milestoneHitArray = await getMilestoneHitArray(projTitle);
+  console.log("Milestone hit array is now: " + milestoneHitArray);
   res.render("project-detail", {
     projInfo: projInfo,
     isLiked: isLiked,
@@ -300,6 +302,7 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
     currUser: currUser,
     updates: updates,
     milestones: milestones,
+    milestoneHitArray: milestoneHitArray,
     bundles: bundles,
     tierFunding: tierFunding
   });
@@ -699,7 +702,41 @@ router.get("/project/:projtitle/delete", loggedIn, async (req, res, next) => {
   }
 })
 
+router.get("/projects/categories", loggedIn, async (req, res, next) => {
+  const results = await getProjectCategories();
+  console.log(results);
+  res.render("project-categories", {categories: results});
+})
 
+router.get("/projects/category/:type", loggedIn, async (req, res, next) => {
+  var type = req.params.type;
+  const results = await getProjectsByCategory(type);
+  res.render("project-list-by-category", { projects: results, type: type});
+})
+
+
+// project page functions
+//
+//
+
+async function getProjectsByCategory(type) {
+  try {
+    var queryString = "select * from taggedwith where type = $1"
+    const results = await pool.query(queryString, [type]);
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function getProjectCategories()  {
+  try {
+    const results = await pool.query("select * from categories");
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
 
 async function checkIfBundleExists(projTitle, bundleTierNumber) {
   try {
@@ -712,7 +749,7 @@ async function checkIfBundleExists(projTitle, bundleTierNumber) {
   }
 }
 
-// project page functions
+
 async function readProjects() {
   try {
     const results = await pool.query("select * from projects");
@@ -945,6 +982,25 @@ async function deleteProject(projTitle) {
     console.log("Error is: " + e);
     return false;
   }
+}
+
+async function getMilestoneHitArray(projTitle) {
+  const arr = [];
+  try {
+    var currentFunds = await getProjectTotalCurrentFunds(projTitle);
+    console.log(currentFunds);
+    var queryString =
+      "select * from projectmilestones where projtitle = '" + projTitle + "'";
+    const results = await pool.query(queryString);
+    console.log("milestone hit array calculation : " + results.rows);
+    if (results.rows == undefined) return [];
+    results.rows.forEach((milestone) => {
+      if(milestone.amount <= currentFunds) {
+        arr.push(milestone.milestoneno);
+      }
+    })
+    return arr;
+  } catch (e) { return arr; }
 }
 
 //End import part a
