@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+  </head>
+
+  <body>
+    <% include partials/base.ejs %>
+
+	<div class="container-fluid" style="text-align: center;">
+		<div class="row">
+			
+			<div style="float:left; width:100%; height:100%;"></div>
+
+			<!--Content-->
+			<div class="col-8 offset-2">
+				<div class="container-fluid">
+					<h1>List of projects in the <%=type%> category</h1>
+					<br>
+
+					<ul class="list-group">
+						<% if(projects.length == 0) { %>
+							There are no projects in this category yet! Why don't you start one? :D
+							<% } else { %>
+							
+								<% var index = 1%> <% projects.forEach((item) => { %>
+			  
+								<li
+									class="list-group-item d-flex justify-content-between align-items-center"
+								>
+								<a href="/project/<%=item.projtitle%>"><%=item.projtitle %></a>
+									<span class="badge badge-primary badge-pill"><%=index %></span>
+									<% index += 1 %>
+								</li>
+								<% }); %>
+
+							
+							<% } %>
+							
+						  </ul>
+				</div>
+			</div>
+
+			<div style="float:right; width:400px; height:100%;"></div>
+		</div>
+  </body>
+</html>
+

@@ -5,8 +5,8 @@ var api = require("../api");
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  // connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
-  connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
+  connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
+  // connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
 });
 
 // static files
@@ -85,6 +85,12 @@ router.get("/profile/:username", loggedIn, async (req, res) => {
   });
 });
 
+router.get("/my-profile", loggedIn, async(req,res) => {
+  var currUser = req.user[0].username;
+  console.log("current user is :" + currUser);
+  res.redirect("/profile/" + currUser);
+})
+
 // follow/unfollow
 router.get("/profile/:username/follow", loggedIn, async (req, res) => {
   const userinfo = await getUserInfo(req.params.username);
@@ -154,7 +160,60 @@ router.get("/profile/:username/unfollow", loggedIn, async (req, res) => {
   res.render("followResult", { userinfo: userinfo, msg: msg });
 });
 
+router.get("/profile/:username/followers", loggedIn, async (req,res) => {
+  const userinfo = await getUserInfo(req.params.username);
+  const results = await getUserFollowed(req.params.username);
+
+  res.render("followers", {followers: results, userinfo: userinfo });
+});
+
+router.get("/profile/:username/following", loggedIn, async (req,res) => {
+  const userinfo = await getUserInfo(req.params.username);
+  const results = await getUserFollows(req.params.username);
+
+  // console.log(results);
+  
+  res.render("followees", {followees: results, userinfo: userinfo });
+});
+
+router.get("/profile/:username/liked", loggedIn, async (req,res) => {
+  const userinfo = await getUserInfo(req.params.username);
+  const results = await getUserLikes(req.params.username);
+
+  // console.log(results);
+  
+  res.render("likedprojects", {likes: results, userinfo: userinfo });
+});
+
+router.get("/following/projects", loggedIn, async (req,res) => {
+  const userinfo = await getUserInfo(req.user[0].username);
+  const results = await getUserFollows(req.user[0].username);
+  const projArr = await getProjectsOfFollowing(req.user[0].username);
+  console.log(projArr);
+  // // console.log("user following : " + results);
+  // console.log("initial projArr is " + projArr);
+  // results.forEach(async (followedUser) => {
+  //   console.log(followedUser.followee);
+  //   const userProjects = await getProjectsByUser(followedUser.followee);
+  //   // console.log("projects = " + fetchProjects);
+  //   if (userProjects.length > 0) {
+  //     projArr.push(userProjects);
+  //   } 
+  //   console.log(projArr)
+  //   // userProjects.forEach((proj) => {
+  //   //   projArr.push(proj);
+  //   //   console.log(projArr);
+  //   // });
+  // });
+  // // console.log("projArr after all is " + projArr);
+  // await console.log(projArr + " is the final projArr");
+
+  res.render("followeeprojects", {projArr: projArr });
+});
+
+
 // user page functions
+
 async function readUsers() {
   try {
     const results = await pool.query("select * from users");
@@ -234,6 +293,25 @@ async function checkIfUserFollowing(follower, followee) {
   } catch (e) {}
 }
 
+async function getProjectsOfFollowing(username) {
+  try {
+    const projArr = [];
+    const following = await getUserFollows(username);
+    for(const followedUser of following) {
+      const userProjects = await getProjectsByUser(followedUser.followee);
+      for(const proj of userProjects) {
+        projArr.push(proj);
+        // console.log("projArr is appended with " + proj.projtitle);
+      }
+    }
+    // console.log("projArr returned from function is: " + projArr);
+    return projArr;
+  } catch(e) {
+    return [];
+  }
+}
+
+
 //project pages
 router.get("/project/new", loggedIn, (req, res) =>
   res.render("project-signup")
@@ -253,9 +331,8 @@ router.get("/my-projects", loggedIn, async (req, res) => {
 
 router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const projTitle = req.params.projtitle;
-  // projTitle = await projTitle.replace(" ", "%20");
 
-  console.log(projTitle);
+  // console.log(projTitle);
   const projInfo = await getProjectInfo(projTitle);
   const totalCurrFunds = await getProjectTotalCurrentFunds(
     req.params.projtitle
@@ -274,31 +351,17 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
   console.log(comments);
 
   const currUser = req.user[0].username;
-  const checkTier1Funded = await checkIfUserHasFundedTier(
-    currUser,
-    projTitle,
-    1
-  );
-  const checkTier2Funded = await checkIfUserHasFundedTier(
-    currUser,
-    projTitle,
-    2
-  );
-  const checkTier3Funded = await checkIfUserHasFundedTier(
-    currUser,
-    projTitle,
-    3
-  );
 
+  const pastDeadline = await checkIfProjectPastDeadline(projTitle);
+  // console.log("Is project past deadline: " + pastDeadline);
   const likers = await getUsersWhoLike(projTitle);
   const milestones = await getProjMilestones(projTitle);
-  const bundle1 = await getProjectBundleItem(projTitle, 1);
-  const bundle2 = await getProjectBundleItem(projTitle, 2);
-  const bundle3 = await getProjectBundleItem(projTitle, 3);
 
-  console.log("Bundle 1 Amount: " + bundle1.amount);
-  console.log("Bundle 1 Description: " + bundle1.description);
+  const bundles = await getAllProjectBundles(projTitle);
+  const tierFunding = await getFundedTiersOfProjectByUser(projTitle, currUser); // array of bool for each tier of funding for this proj
 
+  const milestoneHitArray = await getMilestoneHitArray(projTitle);
+  // console.log("Milestone hit array is now: " + milestoneHitArray);
   res.render("project-detail", {
     projInfo: projInfo,
     isLiked: isLiked,
@@ -311,12 +374,10 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
     currUser: currUser,
     updates: updates,
     milestones: milestones,
-    tier1Funded: checkTier1Funded,
-    tier2Funded: checkTier2Funded,
-    tier3Funded: checkTier3Funded,
-    bundle1: bundle1,
-    bundle2: bundle2,
-    bundle3: bundle3
+    milestoneHitArray: milestoneHitArray,
+    bundles: bundles,
+    tierFunding: tierFunding,
+    pastDeadline: pastDeadline
   });
 });
 
@@ -380,39 +441,79 @@ router.get("/project/:projtitle/fund/:tier", loggedIn, async (req, res) => {
   var currentUser = req.user[0].username;
   var projTitle = req.params.projtitle;
   var fundTier = req.params.tier;
-  console.log("Current FundTier is :" + fundTier);
+  const projInfo = await getProjectInfo(projTitle);
+  const funded = await checkIfUserHasFundedTier(currentUser, projTitle, fundTier);
+  const tierExists = await checkIfProjectTierExists(projTitle, fundTier);
+
+  if (funded) { // fundings has a row with projtitle and curruser and fundtier
+    var msg = "You have already funded " + projTitle + " at tier " + fundTier + "!";
+    res.render("fundResult", {
+      projInfo: projInfo,
+      currentuser: req.user[0].username,
+      msg: msg
+    });
+  } else if (!tierExists) { // projectbundles does not contain this projtitle + tier
+    var msg = "Tier '" + fundTier + "' doesn't exist!";
+    res.render("fundResult", {
+      projInfo: projInfo,
+      currentuser: req.user[0].username,
+      msg: msg
+    });
+  } else { // we can create a new record for funding with the variables provided
+    var queryString = "INSERT INTO fundings (username, projtitle, tier) VALUES (";
+    queryString += "'" + currentUser + "', '" + projTitle + "', '" + fundTier + "')";
+    await pool.query(queryString, err => {
+      if (err) { // user funding his own project, caught with trigger
+        console.log(err);
+        var msg = "You cannot fund your own project!";
+        
+      } else { // success
+        console.log("new funding created");
+        var msg = "Successfully funded " + projTitle + " at tier " + fundTier + "!";
+        
+      }
+      res.render("fundResult", {
+        projInfo: projInfo,
+        currentuser: req.user[0].username,
+        msg: msg
+      });
+    });
+  }
+});
+
+// remove funding by user
+router.get("/project/:projtitle/unfund/:tier", loggedIn, async (req, res) => {
+  var currentUser = req.user[0].username;
+  var projTitle = req.params.projtitle;
+  var fundTier = req.params.tier;
+  // console.log("Current FundTier is :" + fundTier);
   const projInfo = await getProjectInfo(projTitle);
   const projOwnerInfo = await getOwner(projTitle);
   const projOwnerName = projOwnerInfo[0].username;
-  const funded = await checkIfUserHasFundedTier(
-    currentUser,
-    projTitle,
-    fundTier
-  );
-  console.log("Funded status is: " + funded);
-  if (currentUser == projOwnerName) {
+  const funded = await checkIfUserHasFundedTier(currentUser, projTitle, fundTier);
+  // console.log("Funded status is: " + funded);
+  if(currentUser == projOwnerName) {
     var msg = "You cannot fund your own project!";
-  } else if (funded) {
-    var msg =
-      "You have already funded " + projTitle + " at tier " + fundTier + "!";
+  } else if (!funded) {
+    var msg = "You have not funded " + projTitle + " at tier " + fundTier + " or the tier doesn't exist!";
+  } else if (await checkIfProjectPastDeadline(projTitle)) {
+    console.log("Project past deadline in get: " + await checkIfProjectPastDeadline(projTitle));
+    var msg = "Project deadline is already over! You cannot refund now!"
   } else {
-    var queryString =
-      "INSERT INTO fundings (username, projtitle, tier) VALUES (";
-    queryString +=
-      "'" + currentUser + "', '" + projTitle + "', '" + fundTier + "')";
-    console.log(queryString);
-    await pool.query(queryString, err => {
+    var queryString = "DELETE FROM fundings where username = $1 and projtitle = $2 and tier = $3" ;
+    // console.log(queryString);
+    await pool.query(queryString, [currentUser, projTitle, fundTier], err => {
       if (err) {
-        console.log(fundTier);
-        console.log("invalid values for inserting to fundings");
+        // console.log(fundTier);
+        console.log("could not delete funding!");
       } else {
-        console.log("new funding created");
+        console.log("funding deleted");
       }
     });
-    var msg = "Successfully funded " + projTitle + " at tier " + fundTier + "!";
+    var msg = "Successfully unfunded " + projTitle + " at tier " + fundTier + "!";
   }
 
-  res.render("fundResult", {
+  res.render("unFundResult", {
     projInfo: projInfo,
     currentuser: req.user[0].username,
     msg: msg
@@ -447,11 +548,16 @@ router.post("/project-update", loggedIn, async (req, res, next) => {
   }
 });
 
+router.get("/project/:projtitle/comment-spam", loggedIn, async(req,res,next) => {
+  var projTitle = req.params.projtitle;
+  res.render("comment-spam", {projTitle, projTitle});
+});
+
 router.post("/post-comments", loggedIn, async (req, res, next) => {
   curr_url = req.headers.referer;
   splitstr = curr_url.split("/");
   projTitle = splitstr[splitstr.length - 1];
-  projTitle = projTitle.replace("%20", " ");
+  projTitle = projTitle.replace(/%20/g, " ");
   // var projTitle = req.body.projTitle;
   var comment = req.body.comments;
   var currentUser = req.user[0].username;
@@ -469,8 +575,13 @@ router.post("/post-comments", loggedIn, async (req, res, next) => {
   console.log(queryString);
   try {
     await pool.query(queryString, (err, results) => {
-      console.log("comment posted!");
-      res.redirect(curr_url);
+      if(err) {
+        console.log("stop spamming the comments!");
+        res.redirect("/project/" + projTitle + "/comment-spam");
+      } else {
+        console.log("comment posted!");
+        res.redirect(curr_url);
+      }
     });
   } catch (e) {
     console.log(e);
@@ -482,101 +593,77 @@ router.post("/project-signup", loggedIn, async (req, res, next) => {
   var projDesc = req.body.projectDesc;
   var projTargetAmt = req.body.projectTargetAmt;
   var projDeadline = req.body.projectDeadline;
-  const projTitleExists = await checkProjTitle();
-  if (projTitleExists) {
-    res.redirect("/error/projectexists");
-  }
-  var queryString =
-    "INSERT INTO projects (projtitle, datecreated, description, targetamount, deadline) VALUES(";
-  var projDateCreated = api.getDateNow();
-  queryString +=
-    "'" +
-    projTitle +
-    "', '" +
-    projDateCreated +
-    "', '" +
-    projDesc +
-    "', '" +
-    projTargetAmt +
-    "', '" +
-    projDeadline +
-    "')";
   var currentUser = req.user[0].username;
-  var complementQueryString =
-    "INSERT INTO owns (username, projtitle) VALUES('" +
-    currentUser +
-    "', '" +
-    projTitle +
-    "')";
-  console.log(queryString);
-  console.log(complementQueryString);
+  const projTitleExists = await checkProjTitle(projTitle);
+  if (projTitleExists) {
+    res.redirect("/projectexists-error");
+    res.end();
+  }
+  var procedureQuery = "CALL insert_project_own($1, $2, $3, $4, $5, $6);"; //projtitle, date created, desc, targetamt, deadline, ownerusername
+  var projDateCreated = api.getDateNow();
+  var projectAdded = false;
   try {
-    await pool.query(queryString);
-    await pool.query(complementQueryString);
-  } catch (e) {}
-
-  var projCategory = req.body.projectCategory;
-  console.log("Project Category is : " + projCategory);
-  var categoryString =
-    "INSERT INTO taggedwith(projtitle, type) VALUES ('" +
-    projTitle +
-    "', '" +
-    projCategory +
-    "')";
-  await pool.query(categoryString, err => {
-    if (err) {
-      console.log("problem adding category");
-    } else {
-      console.log("category added");
-    }
-  });
-
-  var tierOneAmount = req.body.tierOneAmount;
-  var tierOneRewards = req.body.tierOneRewards;
-  var tierTwoAmount = req.body.tierTwoAmount;
-  var tierTwoRewards = req.body.tierTwoRewards;
-  var tierThreeAmount = req.body.tierThreeAmount;
-  var tierThreeRewards = req.body.tierThreeRewards;
-
-  var queryString2 =
-    "INSERT INTO projectbundles(projtitle, tier, amount, description) VALUES($1, $2, $3, $4)";
-  await pool.query(
-    queryString2,
-    [projTitle, 1, tierOneAmount, tierOneRewards],
-    err => {
-      if (err) {
-        console.log("tier one problem");
-      } else {
-        console.log("tier one ok");
+    await pool.query(procedureQuery, 
+      [projTitle, projDateCreated, projDesc, projTargetAmt, projDeadline, currentUser], 
+      async (err, result) => {
+      if(err) {
+        console.log("error creating project: "+ err);
+        res.redirect("/create-project-error");
+        // console.log("never redirect?");
+      } else { // add the rest
+        console.log("why this one running?");
+        projectAdded = true;
+        var projCategory = req.body.projectCategory;
+        console.log("Project Category is : " + projCategory);
+        var categoryString =
+          "INSERT INTO taggedwith(projtitle, type) VALUES ('" +
+          projTitle +
+          "', '" +
+          projCategory +
+          "')";
+        await pool.query(categoryString, err => {
+          if (err) {
+            console.log("problem adding category");
+          } else {
+            console.log("category added");
+          }
+        });
+      
+        var tierOneAmount = req.body.tierOneAmount;
+        var tierOneRewards = req.body.tierOneRewards;
+      
+        var queryString2 =
+          "INSERT INTO projectbundles(projtitle, tier, amount, description) VALUES($1, $2, $3, $4)";
+        await pool.query(
+          queryString2,
+          [projTitle, 1, tierOneAmount, tierOneRewards],
+          err => {
+            if (err) {
+              console.log("tier one bundle problem");
+            } else {
+              console.log("tier one bundle ok");
+            }
+          }
+        );
+        if(projectAdded) {
+          res.redirect("/projects");
+        } else {
+          res.redirect("/create-project-error");
+        }
       }
-    }
-  );
-
-  await pool.query(
-    queryString2,
-    [projTitle, 2, tierTwoAmount, tierTwoRewards],
-    err => {
-      if (err) {
-        console.log("tier two problem");
-      } else {
-        console.log("tier two ok");
-      }
-    }
-  );
-
-  await pool.query(
-    queryString2,
-    [projTitle, 3, tierThreeAmount, tierThreeRewards],
-    err => {
-      if (err) {
-        console.log("tier three problem");
-      } else {
-        console.log("tier three ok");
-      }
-    }
-  );
-  res.redirect("/projects");
+    })
+  } catch (e) {
+    console.log(e);
+    res.redirect("/create-project-error");
+  }
 });
+
+router.get("/create-project-error", loggedIn, async (req,res) => {
+  res.render("create-project-error");
+});
+router.get("/projectexists-error", loggedIn, async (req, res) => {
+  res.render("projectexists-error");
+})
 
 router.get("/access-errorr", loggedIn, async (req, res, next) => {
   res.render("access-error");
@@ -606,10 +693,10 @@ router.post("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
   if (!projTitleExists) {
     res.redirect("/invalidproject-error");
   }
-  console.log(projDesc);
-  console.log(projTargetAmt);
-  console.log(projDeadline);
-  console.log(projTitle);
+  // console.log(projDesc);
+  // console.log(projTargetAmt);
+  // console.log(projDeadline);
+  // console.log(projTitle);
   var queryString =
     "UPDATE projects SET description = $1, targetamount = $2, deadline = $3 where projtitle = $4";
   await pool.query(
@@ -635,52 +722,9 @@ router.post("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
     }
   });
 
-  var tierOneAmount = req.body.tierOneAmount;
-  var tierOneRewards = req.body.tierOneRewards;
-  var tierTwoAmount = req.body.tierTwoAmount;
-  var tierTwoRewards = req.body.tierTwoRewards;
-  var tierThreeAmount = req.body.tierThreeAmount;
-  var tierThreeRewards = req.body.tierThreeRewards;
-
-  var queryString2 =
-    "UPDATE projectbundles SET amount = $1, description = $2 where projtitle = $3 and tier = $4";
-  await pool.query(
-    queryString2,
-    [tierOneAmount, tierOneRewards, projTitle, 1],
-    err => {
-      if (err) {
-        console.log("tier one problem editing");
-      } else {
-        console.log("tier one edit ok");
-      }
-    }
-  );
-
-  await pool.query(
-    queryString2,
-    [tierTwoAmount, tierTwoRewards, projTitle, 2],
-    err => {
-      if (err) {
-        console.log("tier two problem editing");
-      } else {
-        console.log("tier two edit ok");
-      }
-    }
-  );
-
-  await pool.query(
-    queryString2,
-    [tierThreeAmount, tierThreeRewards, projTitle, 3],
-    err => {
-      if (err) {
-        console.log("tier three problem editing");
-      } else {
-        console.log("tier three edit ok");
-      }
-    }
-  );
-
-  res.redirect("/project/" + projTitle);
+  
+  
+  res.redirect("/project/"+projTitle);
 });
 
 router.get(
@@ -737,6 +781,48 @@ router.get("/milestoneexists-error", loggedIn, (req, res, next) => {
   res.render("milestoneexists-error");
 });
 
+router.get("/project/:projtitle/add-bundle", loggedIn, async (req, res, next) => {
+  var projInfo = await getProjectInfo(req.params.projtitle);
+  var currUser = req.user[0].username;
+  var projOwner = await getOwner(projInfo[0].projtitle);
+  if(currUser != projOwner[0].username) {
+    res.redirect("/access-error");
+  }
+  res.render("project-add-bundle", {projInfo: projInfo});
+});
+
+router.get("/project/:projtitle/bundleexists-error", loggedIn, (req, res, next) => {
+  res.render("bundleexist-error", { projTitle: req.params.projtitle });
+});
+
+router.post("/project/:projtitle/add-bundle", loggedIn, async (req, res, next) => {
+  var projTitle = req.params.projtitle;
+  var bundleTierNumber = req.body.bundleTierNumber
+  var bundleTierDesc = req.body.bundleTierDesc;
+  var bundleTierFundAmt = req.body.bundleTierFundAmt;
+  const projTitleExists = await checkProjTitle(projTitle);
+  if (!projTitleExists) {
+    res.redirect("/invalidproject-error");
+  }
+  
+  var bundleExists = await checkIfBundleExists(projTitle, bundleTierNumber);
+  if(bundleExists) {
+    res.redirect("/project/" + projTitle + "/bunddleexists-error");
+  } else {
+    var queryString = "INSERT INTO projectbundles(projtitle, tier, amount, description) VALUES ($1, $2, $3, $4)";
+    await pool.query(queryString, [projTitle, bundleTierNumber, bundleTierFundAmt, bundleTierDesc], err => {
+      if(err) {
+        console.log("problem adding bundle");
+      } else {
+        console.log("bundle added");
+      }
+    });
+    res.redirect("/project/" + projTitle);
+  }
+});
+
+
+
 router.get("/project/:projtitle/delete", loggedIn, async (req, res, next) => {
   var projTitle = req.params.projtitle;
   const results = await deleteProject(projTitle);
@@ -748,9 +834,66 @@ router.get("/project/:projtitle/delete", loggedIn, async (req, res, next) => {
     console.log("failed to delete project");
     res.redirect("/project/" + projTitle);
   }
-});
+})
+
+router.get("/projects/categories", loggedIn, async (req, res, next) => {
+  const results = await getProjectCategories();
+  console.log(results);
+  res.render("project-categories", {categories: results});
+})
+
+router.get("/projects/category/:type", loggedIn, async (req, res, next) => {
+  var type = req.params.type;
+  const results = await getProjectsByCategory(type);
+  res.render("project-list-by-category", { projects: results, type: type});
+})
+
 
 // project page functions
+//
+//
+
+async function getProjectsByUser(username) {
+  try {
+    var queryString = "select projtitle from owns where username = '" + username + "'";
+    const results = await pool.query(queryString);
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function getProjectsByCategory(type) {
+  try {
+    var queryString = "select * from taggedwith where type = $1"
+    const results = await pool.query(queryString, [type]);
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function getProjectCategories()  {
+  try {
+    const results = await pool.query("select * from categories");
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function checkIfBundleExists(projTitle, bundleTierNumber) {
+  try {
+    var queryString = "select * from projectbundles where projtitle = $1 and tier = $2";
+    const results = await pool.query(queryString, [projTitle, bundleTierNumber]);
+    if (results == undefined) return false;
+    return (results.rows[0].projtitle = projTitle);
+  } catch (e) {
+    return false;
+  }
+}
+
+
 async function readProjects() {
   try {
     const results = await pool.query("select * from projects");
@@ -881,6 +1024,20 @@ async function checkIfUserLikesProject(username, projTitle) {
   } catch (e) {}
 }
 
+async function checkIfProjectTierExists(projTitle, fundTier) {
+  try {
+    var queryString =
+      "select * from projectbundles where projtitle = $1 and tier = $2";
+    const results = await pool.query(queryString, [
+      projTitle,
+      fundTier
+    ]);
+    // console.log(results.rows);
+    if (results.rows[0] == undefined) return false;
+    return results.rows[0].projtitle == projTitle;
+  } catch (e) { console.log(e); }
+}
+
 async function checkIfUserHasFundedTier(currentUser, projTitle, fundTier) {
   try {
     var queryString =
@@ -929,6 +1086,16 @@ async function getProjMilestones(projTitle) {
   } catch (e) {}
 }
 
+async function getAllProjectBundles(projTitle) {
+  try {
+    var queryString = "select * from projectbundles where projtitle = $1 order by tier asc";
+    const results = await pool.query(queryString, [projTitle]);
+    // console.log(results.rows);
+    if (results.rows == undefined) return [];
+    return results.rows;
+  } catch (e) {}
+}
+
 async function getProjectBundleItem(projTitle, tier) {
   try {
     var queryString =
@@ -939,6 +1106,21 @@ async function getProjectBundleItem(projTitle, tier) {
     if (results.rows == undefined) return [];
     return results.rows;
   } catch (e) {}
+}
+
+async function getFundedTiersOfProjectByUser(projTitle, currUser) {
+  const arr = [];
+  try {
+    var queryString =
+      "select * from fundings where projtitle = $1 and username = $2";
+    const results = await pool.query(queryString, [projTitle, currUser]);
+    console.log(results.rows);
+    if (results.rows == undefined) return [];
+    results.rows.forEach((item) => {
+      arr.push(item.tier);
+    })
+    return arr;
+  } catch (e) { return []; }
 }
 
 async function deleteProject(projTitle) {
@@ -957,6 +1139,59 @@ async function deleteProject(projTitle) {
     console.log("error with deleting project!");
     console.log("Error is: " + e);
     return false;
+  }
+}
+
+async function getMilestoneHitArray(projTitle) {
+  const arr = [];
+  try {
+    var currentFunds = await getProjectTotalCurrentFunds(projTitle);
+    // console.log(currentFunds);
+    var queryString =
+      "select * from projectmilestones where projtitle = '" + projTitle + "'";
+    const results = await pool.query(queryString);
+    // console.log("milestone hit array calculation : " + results.rows);
+    if (results.rows == undefined) return [];
+    results.rows.forEach((milestone) => {
+      if(milestone.amount <= currentFunds) {
+        arr.push(milestone.milestoneno);
+      }
+    })
+    return arr;
+  } catch (e) { return arr; }
+}
+
+async function checkIfProjectPastDeadline(projTitle) {
+  try {
+    var queryString =
+      "select date(deadline) from projects where projtitle = '" + projTitle + "'";
+    const results = await pool.query(queryString);
+    // console.log(results.rows);
+    var currentDate = api.getDateNow();
+    var currYear = currentDate.slice(0,4);
+    var currMonth = currentDate.slice(5,7);
+    var currDate = currentDate.slice(8,10);
+    // console.log("Current: Year: " + currYear + ", Month: " + currMonth + ", Date: " + currDate)
+    var projDeadline = results.rows[0].date;
+    var deadlineYear = projDeadline.getFullYear();
+    var deadlineMonth =  projDeadline.getMonth() + 1;
+    var deadlineDate = projDeadline.getDate();
+    // console.log("Deadline: Year: " + deadlineYear + ", Month: " + deadlineMonth + ", Date: " + deadlineDate );
+    if(currYear > deadlineYear) { // current year is > deadline year
+      return true;
+    } else if (currYear == deadlineYear) { // curr year == deadline year
+      if(currMonth > deadlineMonth) { // curr year == deadline year, curr month > deadline month
+        return true;
+      } else if (currMonth == deadlineMonth) { // same year, same month, check day
+        return currDate>deadlineDate;
+      } else { // same year, but curr month < deadline month
+        return false;
+      }
+    } else { // curr year < deadline year
+      return false;
+    }
+  } catch (e) {
+    console.log(e);
   }
 }
 

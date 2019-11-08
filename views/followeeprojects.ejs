@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+  </head>
+
+  <body>
+    <% include partials/base.ejs %>
+
+	<div class="container-fluid" style="text-align: center;">
+		<div class="row">
+			
+			<div style="float:left; width:100%; height:100%;"></div>
+
+			<!--Content-->
+			<div class="col-8 offset-2">
+				<div class="container-fluid">
+					<h1>Projects by users you follow</h1>
+					<br>
+
+					<ul class="list-group">
+							<% var index = 1%> <% projArr.forEach((proj) => { %>
+			  
+							<li
+							  class="list-group-item d-flex justify-content-between align-items-center"
+							>
+							<a href="/project/<%=proj.projtitle%>"><%=proj.projtitle %></a>
+							  <span class="badge badge-primary badge-pill"><%=index %></span>
+							  <% index += 1 %>
+							</li>
+							<% }); %>
+						  </ul>
+				</div>
+			</div>
+		</div>
+  </body>
+</html>
+

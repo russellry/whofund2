@@ -44,7 +44,7 @@
             <h1><%=projInfo[0].projtitle%></h1>
 
             <% if(owner[0].username == currUser) { %>
-              <button data-toggle="collapse" data-target="#demo">Update Project</button>
+              <button class="btn btn-success" data-toggle="collapse" data-target="#demo">Update Project</button>
             </br><div id="demo" class="collapse"></br>
               <form action="/project-update" method="POST">
                 <div>
@@ -60,12 +60,20 @@
                   </div>
                   <input type="submit" value="Submit" /></form></br></br>
               </div>
-
+              <br>
               <button class="btn btn-primary" type="button">
                 <a
                   href="/project/<%=projInfo[0].projtitle%>/edit"
                   style="color:white"
                   >Edit Project Details</a
+                >
+              </button> 
+
+              <button class="btn btn-primary" type="button">
+                <a
+                  href="/project/<%=projInfo[0].projtitle%>/add-bundle"
+                  style="color:white"
+                  >Add New Bundle</a
                 >
               </button>
 
@@ -76,7 +84,7 @@
                   >Add Milestone</a
                 >
               </button>
-
+              <br><br>
               <button class="btn btn-danger" type="button">
                   <a
                     href="/project/<%=projInfo[0].projtitle%>/delete"
@@ -84,7 +92,7 @@
                     >DELETE PROJECT</a
                   >
                 </button>
-              
+              <br><br>
               <%}%>
               <div class="row">
                   <div class="col-6">
@@ -125,7 +133,7 @@
                   </li>
                   <li class="list-group-item">
                     Funded by 
-                    <% if(likers.length) { %>
+                    <% if(projFunders.length) { %>
                       <%=projFunders.length%> 
                     <% } else { %>
                       0
@@ -143,51 +151,31 @@
                     <a>Target Amount Not Reached Yet</a>
                   </li>
     
-                 <br>
-                 <h3>Funding rewards:</h3>
-                 <p>Tier 1: <%=bundle1[0].description%></p> 
-                 <br>
-                 <p>Tier 2: <%=bundle2[0].description%></p> 
-                 <br>
-                 <p>Tier 3: <%=bundle3[0].description%></p> 
-                 <br>
-    
-                  <% if(!targetHit && owner[0].username != currUser) { %>
-                    <% if(!tier1Funded) { %>
-                      <button class="btn btn-primary" type="button">
+                  <br>
+                  <h3>Funding rewards:</h3>
+                  <% bundles.forEach((item) => { %>
+                    <p>Tier <%= item.tier%> Amount: $<%=item.amount%></p>
+                    <p>Rewards: <%=item.description%></p>
+                    <% if(!targetHit && owner[0].username != currUser && !tierFunding.includes(item.tier) && !pastDeadline) { %>
+                    <button class="btn btn-primary" type="button">
+                      <a
+                        href="/project/<%=projInfo[0].projtitle%>/fund/<%=item.tier%>"
+                        style="color:white"
+                        >Fund Tier <%=item.tier%> ($<%=item.amount%>)</a
+                      >
+                    </button>
+                    <% } else if(!targetHit && owner[0].username != currUser && !pastDeadline) { %>
+                      <button class="btn btn-danger" type="button">
                         <a
-                          href="/project/<%=projInfo[0].projtitle%>/fund/1"
+                          href="/project/<%=projInfo[0].projtitle%>/unfund/<%=item.tier%>"
                           style="color:white"
-                          >Fund Tier 1 ($<%=bundle1[0].amount %>)</a
+                          >Unfund Tier <%=item.tier%> ($<%=item.amount%>)</a
                         >
                       </button>
-                    <% } %>
-                    </br>
-                    <% if(!tier2Funded) { %>
-                      <button class="btn btn-primary" type="button">
-                        <a
-                          href="/project/<%=projInfo[0].projtitle%>/fund/2"
-                          style="color:white"
-                          >Fund Tier 2 ($<%=bundle2[0].amount %>)</a
-                        >
-                      </button>
-                    <% } %>
-                  </br>
-
-                    <% if(!tier3Funded) { %>
-                      <button class="btn btn-primary" type="button">
-                        <a
-                          href="/project/<%=projInfo[0].projtitle%>/fund/3"
-                          style="color:white"
-                          >Fund Tier 3 ($<%=bundle3[0].amount %>)</a
-                        >
-                      </button>
-                    <% } %>
-                        
-    
-                  <% } %>
+                    <%}; %>
+                    <br><br><br>
+                  <% }); %>
                 </ul>
-    
                 <% } %>
               </div>
               </div>
@@ -205,6 +193,12 @@
                 <p>Milestone #<%=item.milestoneno %> -- Target Amount: $<%=item.amount%></p>
                 <h5>Milestone Rewards: </h5>
                 <p><%=item.description%></p>
+                <% if(milestoneHitArray.includes(item.milestoneno)) { %>
+                  <p>Milestone achieved!</p>
+                <% } else { %>
+                  <p>Milestone not yet achieved!</p>
+                <% } %>
+
                 <% i += 1 %>
               </li>
               <% }); %>
