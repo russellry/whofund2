@@ -331,9 +331,8 @@ router.get("/my-projects", loggedIn, async (req, res) => {
 
 router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const projTitle = req.params.projtitle;
-  // projTitle = await projTitle.replace(" ", "%20");
 
-  console.log(projTitle);
+  // console.log(projTitle);
   const projInfo = await getProjectInfo(projTitle);
   const totalCurrFunds = await getProjectTotalCurrentFunds(
     req.params.projtitle
@@ -354,7 +353,7 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const currUser = req.user[0].username;
 
   const pastDeadline = await checkIfProjectPastDeadline(projTitle);
-  console.log("Is project past deadline: " + pastDeadline);
+  // console.log("Is project past deadline: " + pastDeadline);
   const likers = await getUsersWhoLike(projTitle);
   const milestones = await getProjMilestones(projTitle);
 
@@ -442,40 +441,33 @@ router.get("/project/:projtitle/fund/:tier", loggedIn, async (req, res) => {
   var currentUser = req.user[0].username;
   var projTitle = req.params.projtitle;
   var fundTier = req.params.tier;
-  // console.log("Current FundTier is :" + fundTier);
   const projInfo = await getProjectInfo(projTitle);
-  const projOwnerInfo = await getOwner(projTitle);
-  // const projOwnerName = projOwnerInfo[0].username;
   const funded = await checkIfUserHasFundedTier(currentUser, projTitle, fundTier);
   const tierExists = await checkIfProjectTierExists(projTitle, fundTier);
-  // console.log("Funded status is: " + funded);
-  //if(currentUser == projOwnerName) {
-    // var msg = "You cannot fund your own project!";
-  // } else 
-  if (funded) {
-    var msg = "You have already funded " + projTitle + " at tier " + fundTier + " or the tier doesn't exist!";
+
+  if (funded) { // fundings has a row with projtitle and curruser and fundtier
+    var msg = "You have already funded " + projTitle + " at tier " + fundTier + "!";
     res.render("fundResult", {
       projInfo: projInfo,
       currentuser: req.user[0].username,
       msg: msg
     });
-  } else if (!tierExists) {
+  } else if (!tierExists) { // projectbundles does not contain this projtitle + tier
     var msg = "Tier '" + fundTier + "' doesn't exist!";
     res.render("fundResult", {
       projInfo: projInfo,
       currentuser: req.user[0].username,
       msg: msg
     });
-  } else {
+  } else { // we can create a new record for funding with the variables provided
     var queryString = "INSERT INTO fundings (username, projtitle, tier) VALUES (";
     queryString += "'" + currentUser + "', '" + projTitle + "', '" + fundTier + "')";
-    // console.log(queryString);
     await pool.query(queryString, err => {
-      if (err) {
+      if (err) { // user funding his own project, caught with trigger
         console.log(err);
         var msg = "You cannot fund your own project!";
         
-      } else {
+      } else { // success
         console.log("new funding created");
         var msg = "Successfully funded " + projTitle + " at tier " + fundTier + "!";
         
@@ -701,10 +693,10 @@ router.post("/project/:projtitle/edit", loggedIn, async (req, res, next) => {
   if (!projTitleExists) {
     res.redirect("/invalidproject-error");
   }
-  console.log(projDesc);
-  console.log(projTargetAmt);
-  console.log(projDeadline);
-  console.log(projTitle);
+  // console.log(projDesc);
+  // console.log(projTargetAmt);
+  // console.log(projDeadline);
+  // console.log(projTitle);
   var queryString =
     "UPDATE projects SET description = $1, targetamount = $2, deadline = $3 where projtitle = $4";
   await pool.query(
@@ -1174,17 +1166,17 @@ async function checkIfProjectPastDeadline(projTitle) {
     var queryString =
       "select date(deadline) from projects where projtitle = '" + projTitle + "'";
     const results = await pool.query(queryString);
-    console.log(results.rows);
+    // console.log(results.rows);
     var currentDate = api.getDateNow();
     var currYear = currentDate.slice(0,4);
     var currMonth = currentDate.slice(5,7);
     var currDate = currentDate.slice(8,10);
-    console.log("Current: Year: " + currYear + ", Month: " + currMonth + ", Date: " + currDate)
+    // console.log("Current: Year: " + currYear + ", Month: " + currMonth + ", Date: " + currDate)
     var projDeadline = results.rows[0].date;
     var deadlineYear = projDeadline.getFullYear();
     var deadlineMonth =  projDeadline.getMonth() + 1;
     var deadlineDate = projDeadline.getDate();
-    console.log("Deadline: Year: " + deadlineYear + ", Month: " + deadlineMonth + ", Date: " + deadlineDate );
+    // console.log("Deadline: Year: " + deadlineYear + ", Month: " + deadlineMonth + ", Date: " + deadlineDate );
     if(currYear > deadlineYear) { // current year is > deadline year
       return true;
     } else if (currYear == deadlineYear) { // curr year == deadline year
@@ -1198,9 +1190,8 @@ async function checkIfProjectPastDeadline(projTitle) {
     } else { // curr year < deadline year
       return false;
     }
-    // if (results.rows == undefined) return false;
-    // return (results.rows[0].projtitle = projTitle);
   } catch (e) {
+    console.log(e);
   }
 }
 
