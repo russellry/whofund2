@@ -213,30 +213,6 @@ router.get("/following/projects", loggedIn, async (req,res) => {
 
 
 // user page functions
-async function getProjectsOfFollowing(username) {
-  try {
-    const projArr = [];
-    const following = await getUserFollows(username);
-    for(const followedUser of following) {
-      const userProjects = await getProjectsByUser(followedUser.followee);
-      for(const proj of userProjects) {
-        projArr.push(proj);
-        console.log("projArr is appended with " + proj.projtitle);
-      }
-    }
-    // following.forEach(async (followedUser) => {
-    //   const userProjects = await getProjectsByUser(followedUser.followee);
-    //   userProjects.forEach((proj) => {
-    //     projArr.push(proj.projtitle);
-    //     console.log("projArr is appended with " + proj.projtitle);
-    //   })
-    // })
-    console.log("projArr returned from function is: " + projArr);
-    return projArr;
-  } catch(e) {
-    return [];
-  }
-}
 
 async function readUsers() {
   try {
@@ -317,6 +293,25 @@ async function checkIfUserFollowing(follower, followee) {
   } catch (e) {}
 }
 
+async function getProjectsOfFollowing(username) {
+  try {
+    const projArr = [];
+    const following = await getUserFollows(username);
+    for(const followedUser of following) {
+      const userProjects = await getProjectsByUser(followedUser.followee);
+      for(const proj of userProjects) {
+        projArr.push(proj);
+        // console.log("projArr is appended with " + proj.projtitle);
+      }
+    }
+    // console.log("projArr returned from function is: " + projArr);
+    return projArr;
+  } catch(e) {
+    return [];
+  }
+}
+
+
 //project pages
 router.get("/project/new", loggedIn, (req, res) =>
   res.render("project-signup")
@@ -358,7 +353,8 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
 
   const currUser = req.user[0].username;
 
-  
+  const pastDeadline = await checkIfProjectPastDeadline(projTitle);
+  console.log("Is project past deadline: " + pastDeadline);
   const likers = await getUsersWhoLike(projTitle);
   const milestones = await getProjMilestones(projTitle);
 
@@ -366,7 +362,7 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
   const tierFunding = await getFundedTiersOfProjectByUser(projTitle, currUser); // array of bool for each tier of funding for this proj
 
   const milestoneHitArray = await getMilestoneHitArray(projTitle);
-  console.log("Milestone hit array is now: " + milestoneHitArray);
+  // console.log("Milestone hit array is now: " + milestoneHitArray);
   res.render("project-detail", {
     projInfo: projInfo,
     isLiked: isLiked,
@@ -381,7 +377,8 @@ router.get("/project/:projtitle", loggedIn, async (req, res) => {
     milestones: milestones,
     milestoneHitArray: milestoneHitArray,
     bundles: bundles,
-    tierFunding: tierFunding
+    tierFunding: tierFunding,
+    pastDeadline: pastDeadline
   });
 });
 
@@ -471,6 +468,45 @@ router.get("/project/:projtitle/fund/:tier", loggedIn, async (req, res) => {
   }
 
   res.render("fundResult", {
+    projInfo: projInfo,
+    currentuser: req.user[0].username,
+    msg: msg
+  });
+});
+
+// remove funding by user
+router.get("/project/:projtitle/unfund/:tier", loggedIn, async (req, res) => {
+  var currentUser = req.user[0].username;
+  var projTitle = req.params.projtitle;
+  var fundTier = req.params.tier;
+  // console.log("Current FundTier is :" + fundTier);
+  const projInfo = await getProjectInfo(projTitle);
+  const projOwnerInfo = await getOwner(projTitle);
+  const projOwnerName = projOwnerInfo[0].username;
+  const funded = await checkIfUserHasFundedTier(currentUser, projTitle, fundTier);
+  // console.log("Funded status is: " + funded);
+  if(currentUser == projOwnerName) {
+    var msg = "You cannot fund your own project!";
+  } else if (!funded) {
+    var msg = "You have not funded " + projTitle + " at tier " + fundTier + " or the tier doesn't exist!";
+  } else if (await checkIfProjectPastDeadline(projTitle)) {
+    console.log("Project past deadline in get: " + await checkIfProjectPastDeadline(projTitle));
+    var msg = "Project deadline is already over! You cannot refund now!"
+  } else {
+    var queryString = "DELETE FROM fundings where username = $1 and projtitle = $2 and tier = $3" ;
+    // console.log(queryString);
+    await pool.query(queryString, [currentUser, projTitle, fundTier], err => {
+      if (err) {
+        // console.log(fundTier);
+        console.log("could not delete funding!");
+      } else {
+        console.log("funding deleted");
+      }
+    });
+    var msg = "Successfully unfunded " + projTitle + " at tier " + fundTier + "!";
+  }
+
+  res.render("unFundResult", {
     projInfo: projInfo,
     currentuser: req.user[0].username,
     msg: msg
@@ -1075,11 +1111,11 @@ async function getMilestoneHitArray(projTitle) {
   const arr = [];
   try {
     var currentFunds = await getProjectTotalCurrentFunds(projTitle);
-    console.log(currentFunds);
+    // console.log(currentFunds);
     var queryString =
       "select * from projectmilestones where projtitle = '" + projTitle + "'";
     const results = await pool.query(queryString);
-    console.log("milestone hit array calculation : " + results.rows);
+    // console.log("milestone hit array calculation : " + results.rows);
     if (results.rows == undefined) return [];
     results.rows.forEach((milestone) => {
       if(milestone.amount <= currentFunds) {
@@ -1088,6 +1124,41 @@ async function getMilestoneHitArray(projTitle) {
     })
     return arr;
   } catch (e) { return arr; }
+}
+
+async function checkIfProjectPastDeadline(projTitle) {
+  try {
+    var queryString =
+      "select date(deadline) from projects where projtitle = '" + projTitle + "'";
+    const results = await pool.query(queryString);
+    console.log(results.rows);
+    var currentDate = api.getDateNow();
+    var currYear = currentDate.slice(0,4);
+    var currMonth = currentDate.slice(5,7);
+    var currDate = currentDate.slice(8,10);
+    console.log("Current: Year: " + currYear + ", Month: " + currMonth + ", Date: " + currDate)
+    var projDeadline = results.rows[0].date;
+    var deadlineYear = projDeadline.getFullYear();
+    var deadlineMonth =  projDeadline.getMonth() + 1;
+    var deadlineDate = projDeadline.getDate();
+    console.log("Deadline: Year: " + deadlineYear + ", Month: " + deadlineMonth + ", Date: " + deadlineDate );
+    if(currYear > deadlineYear) { // current year is > deadline year
+      return true;
+    } else if (currYear == deadlineYear) { // curr year == deadline year
+      if(currMonth > deadlineMonth) { // curr year == deadline year, curr month > deadline month
+        return true;
+      } else if (currMonth == deadlineMonth) { // same year, same month, check day
+        return currDate>deadlineDate;
+      } else { // same year, but curr month < deadline month
+        return false;
+      }
+    } else { // curr year < deadline year
+      return false;
+    }
+    // if (results.rows == undefined) return false;
+    // return (results.rows[0].projtitle = projTitle);
+  } catch (e) {
+  }
 }
 
 //End import part a
