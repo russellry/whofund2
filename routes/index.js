@@ -541,6 +541,11 @@ router.post("/project-update", loggedIn, async (req, res, next) => {
   }
 });
 
+router.get("/project/:projtitle/comment-spam", loggedIn, async(req,res,next) => {
+  var projTitle = req.params.projtitle;
+  res.render("comment-spam", {projTitle, projTitle});
+});
+
 router.post("/post-comments", loggedIn, async (req, res, next) => {
   curr_url = req.headers.referer;
   splitstr = curr_url.split("/");
@@ -563,8 +568,13 @@ router.post("/post-comments", loggedIn, async (req, res, next) => {
   console.log(queryString);
   try {
     await pool.query(queryString, (err, results) => {
-      console.log("comment posted!");
-      res.redirect(curr_url);
+      if(err) {
+        console.log("stop spamming the comments!");
+        res.redirect("/project/" + projTitle + "/comment-spam");
+      } else {
+        console.log("comment posted!");
+        res.redirect(curr_url);
+      }
     });
   } catch (e) {
     console.log(e);
