@@ -580,78 +580,115 @@ router.post("/post-comments", loggedIn, async (req, res, next) => {
     console.log(e);
   }
 });
+router.get("/create-project-error", loggedIn, async (req,res) => {
+  res.render("create-project-error");
+});
+router.get("/projectexists-error", loggedIn, async (req, res) => {
+  res.render("projectexists-error");
+})
 
 router.post("/project-signup", loggedIn, async (req, res, next) => {
   var projTitle = req.body.projectTitle;
   var projDesc = req.body.projectDesc;
   var projTargetAmt = req.body.projectTargetAmt;
   var projDeadline = req.body.projectDeadline;
-  const projTitleExists = await checkProjTitle();
-  if (projTitleExists) {
-    res.redirect("/error/projectexists");
-  }
-  var queryString =
-    "INSERT INTO projects (projtitle, datecreated, description, targetamount, deadline) VALUES(";
-  var projDateCreated = api.getDateNow();
-  queryString +=
-    "'" +
-    projTitle +
-    "', '" +
-    projDateCreated +
-    "', '" +
-    projDesc +
-    "', '" +
-    projTargetAmt +
-    "', '" +
-    projDeadline +
-    "')";
   var currentUser = req.user[0].username;
-  var complementQueryString =
-    "INSERT INTO owns (username, projtitle) VALUES('" +
-    currentUser +
-    "', '" +
-    projTitle +
-    "')";
-  console.log(queryString);
-  console.log(complementQueryString);
+  const projTitleExists = await checkProjTitle(projTitle);
+  if (projTitleExists) {
+    res.redirect("/projectexists-error");
+    res.end();
+  }
+  var procedureQuery = "CALL insert_project_own($1, $2, $3, $4, $5, $6);"; //projtitle, date created, desc, targetamt, deadline, ownerusername
+  var projDateCreated = api.getDateNow();
+  var projectAdded = false;
   try {
-    await pool.query(queryString);
-    await pool.query(complementQueryString);
-  } catch (e) {}
-
-  var projCategory = req.body.projectCategory;
-  console.log("Project Category is : " + projCategory);
-  var categoryString =
-    "INSERT INTO taggedwith(projtitle, type) VALUES ('" +
-    projTitle +
-    "', '" +
-    projCategory +
-    "')";
-  await pool.query(categoryString, err => {
-    if (err) {
-      console.log("problem adding category");
-    } else {
-      console.log("category added");
-    }
-  });
-
-  var tierOneAmount = req.body.tierOneAmount;
-  var tierOneRewards = req.body.tierOneRewards;
-
-  var queryString2 =
-    "INSERT INTO projectbundles(projtitle, tier, amount, description) VALUES($1, $2, $3, $4)";
-  await pool.query(
-    queryString2,
-    [projTitle, 1, tierOneAmount, tierOneRewards],
-    err => {
-      if (err) {
-        console.log("tier one bundle problem");
-      } else {
-        console.log("tier one bundle ok");
+    await pool.query(procedureQuery, 
+      [projTitle, projDateCreated, projDesc, projTargetAmt, projDeadline, currentUser], 
+      async (err, result) => {
+      if(err) {
+        console.log("error creating project: "+ err);
+        res.redirect("/create-project-error");
+        // console.log("never redirect?");
+      } else { // add the rest
+        console.log("why this one running?");
+        projectAdded = true;
+        var projCategory = req.body.projectCategory;
+        console.log("Project Category is : " + projCategory);
+        var categoryString =
+          "INSERT INTO taggedwith(projtitle, type) VALUES ('" +
+          projTitle +
+          "', '" +
+          projCategory +
+          "')";
+        await pool.query(categoryString, err => {
+          if (err) {
+            console.log("problem adding category");
+          } else {
+            console.log("category added");
+          }
+        });
+      
+        var tierOneAmount = req.body.tierOneAmount;
+        var tierOneRewards = req.body.tierOneRewards;
+      
+        var queryString2 =
+          "INSERT INTO projectbundles(projtitle, tier, amount, description) VALUES($1, $2, $3, $4)";
+        await pool.query(
+          queryString2,
+          [projTitle, 1, tierOneAmount, tierOneRewards],
+          err => {
+            if (err) {
+              console.log("tier one bundle problem");
+            } else {
+              console.log("tier one bundle ok");
+            }
+          }
+        );
+        if(projectAdded) {
+          res.redirect("/projects");
+        } else {
+          res.redirect("/create-project-error");
+        }
       }
-    }
-  );
-  res.redirect("/projects");
+    })
+  } catch (e) {
+    console.log(e);
+    res.redirect("/create-project-error");
+  }
+
+  // var projCategory = req.body.projectCategory;
+  // console.log("Project Category is : " + projCategory);
+  // var categoryString =
+  //   "INSERT INTO taggedwith(projtitle, type) VALUES ('" +
+  //   projTitle +
+  //   "', '" +
+  //   projCategory +
+  //   "')";
+  // await pool.query(categoryString, err => {
+  //   if (err) {
+  //     console.log("problem adding category");
+  //   } else {
+  //     console.log("category added");
+  //   }
+  // });
+
+  // var tierOneAmount = req.body.tierOneAmount;
+  // var tierOneRewards = req.body.tierOneRewards;
+
+  // var queryString2 =
+  //   "INSERT INTO projectbundles(projtitle, tier, amount, description) VALUES($1, $2, $3, $4)";
+  // await pool.query(
+  //   queryString2,
+  //   [projTitle, 1, tierOneAmount, tierOneRewards],
+  //   err => {
+  //     if (err) {
+  //       console.log("tier one bundle problem");
+  //     } else {
+  //       console.log("tier one bundle ok");
+  //     }
+  //   }
+  // );
+  // res.redirect("/projects");
 });
 
 router.get("/access-errorr", loggedIn, async (req, res, next) => {
