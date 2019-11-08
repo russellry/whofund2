@@ -67,7 +67,7 @@
                   style="color:white"
                   >Edit Project Details</a
                 >
-              </button>
+              </button> 
 
               <button class="btn btn-primary" type="button">
                 <a
@@ -84,7 +84,7 @@
                   >Add Milestone</a
                 >
               </button>
-
+              <br><br>
               <button class="btn btn-danger" type="button">
                   <a
                     href="/project/<%=projInfo[0].projtitle%>/delete"
@@ -92,7 +92,7 @@
                     >DELETE PROJECT</a
                   >
                 </button>
-              
+              <br><br>
               <%}%>
               <div class="row">
                   <div class="col-6">
@@ -156,7 +156,7 @@
                   <% bundles.forEach((item) => { %>
                     <p>Tier <%= item.tier%> Amount: $<%=item.amount%></p>
                     <p>Rewards: <%=item.description%></p>
-                    <% if(!targetHit && owner[0].username != currUser && !tierFunding.includes(item.tier)) { %>
+                    <% if(!targetHit && owner[0].username != currUser && !tierFunding.includes(item.tier) && !pastDeadline) { %>
                     <button class="btn btn-primary" type="button">
                       <a
                         href="/project/<%=projInfo[0].projtitle%>/fund/<%=item.tier%>"
@@ -164,7 +164,15 @@
                         >Fund Tier <%=item.tier%> ($<%=item.amount%>)</a
                       >
                     </button>
-                    <% }; %>
+                    <% } else if(!targetHit && owner[0].username != currUser && !pastDeadline) { %>
+                      <button class="btn btn-danger" type="button">
+                        <a
+                          href="/project/<%=projInfo[0].projtitle%>/unfund/<%=item.tier%>"
+                          style="color:white"
+                          >Unfund Tier <%=item.tier%> ($<%=item.amount%>)</a
+                        >
+                      </button>
+                    <%}; %>
                     <br><br><br>
                   <% }); %>
                 </ul>
@@ -185,6 +193,12 @@
                 <p>Milestone #<%=item.milestoneno %> -- Target Amount: $<%=item.amount%></p>
                 <h5>Milestone Rewards: </h5>
                 <p><%=item.description%></p>
+                <% if(milestoneHitArray.includes(item.milestoneno)) { %>
+                  <p>Milestone achieved!</p>
+                <% } else { %>
+                  <p>Milestone not yet achieved!</p>
+                <% } %>
+
                 <% i += 1 %>
               </li>
               <% }); %>
