@@ -445,33 +445,48 @@ router.get("/project/:projtitle/fund/:tier", loggedIn, async (req, res) => {
   // console.log("Current FundTier is :" + fundTier);
   const projInfo = await getProjectInfo(projTitle);
   const projOwnerInfo = await getOwner(projTitle);
-  const projOwnerName = projOwnerInfo[0].username;
+  // const projOwnerName = projOwnerInfo[0].username;
   const funded = await checkIfUserHasFundedTier(currentUser, projTitle, fundTier);
+  const tierExists = await checkIfProjectTierExists(projTitle, fundTier);
   // console.log("Funded status is: " + funded);
-  if(currentUser == projOwnerName) {
-    var msg = "You cannot fund your own project!";
-    } else if (funded) {
+  //if(currentUser == projOwnerName) {
+    // var msg = "You cannot fund your own project!";
+  // } else 
+  if (funded) {
     var msg = "You have already funded " + projTitle + " at tier " + fundTier + " or the tier doesn't exist!";
+    res.render("fundResult", {
+      projInfo: projInfo,
+      currentuser: req.user[0].username,
+      msg: msg
+    });
+  } else if (!tierExists) {
+    var msg = "Tier '" + fundTier + "' doesn't exist!";
+    res.render("fundResult", {
+      projInfo: projInfo,
+      currentuser: req.user[0].username,
+      msg: msg
+    });
   } else {
     var queryString = "INSERT INTO fundings (username, projtitle, tier) VALUES (";
     queryString += "'" + currentUser + "', '" + projTitle + "', '" + fundTier + "')";
     // console.log(queryString);
     await pool.query(queryString, err => {
       if (err) {
-        // console.log(fundTier);
-        console.log("invalid values for inserting to fundings");
+        console.log(err);
+        var msg = "You cannot fund your own project!";
+        
       } else {
         console.log("new funding created");
+        var msg = "Successfully funded " + projTitle + " at tier " + fundTier + "!";
+        
       }
+      res.render("fundResult", {
+        projInfo: projInfo,
+        currentuser: req.user[0].username,
+        msg: msg
+      });
     });
-    var msg = "Successfully funded " + projTitle + " at tier " + fundTier + "!";
   }
-
-  res.render("fundResult", {
-    projInfo: projInfo,
-    currentuser: req.user[0].username,
-    msg: msg
-  });
 });
 
 // remove funding by user
@@ -580,12 +595,6 @@ router.post("/post-comments", loggedIn, async (req, res, next) => {
     console.log(e);
   }
 });
-router.get("/create-project-error", loggedIn, async (req,res) => {
-  res.render("create-project-error");
-});
-router.get("/projectexists-error", loggedIn, async (req, res) => {
-  res.render("projectexists-error");
-})
 
 router.post("/project-signup", loggedIn, async (req, res, next) => {
   var projTitle = req.body.projectTitle;
@@ -655,41 +664,14 @@ router.post("/project-signup", loggedIn, async (req, res, next) => {
     console.log(e);
     res.redirect("/create-project-error");
   }
-
-  // var projCategory = req.body.projectCategory;
-  // console.log("Project Category is : " + projCategory);
-  // var categoryString =
-  //   "INSERT INTO taggedwith(projtitle, type) VALUES ('" +
-  //   projTitle +
-  //   "', '" +
-  //   projCategory +
-  //   "')";
-  // await pool.query(categoryString, err => {
-  //   if (err) {
-  //     console.log("problem adding category");
-  //   } else {
-  //     console.log("category added");
-  //   }
-  // });
-
-  // var tierOneAmount = req.body.tierOneAmount;
-  // var tierOneRewards = req.body.tierOneRewards;
-
-  // var queryString2 =
-  //   "INSERT INTO projectbundles(projtitle, tier, amount, description) VALUES($1, $2, $3, $4)";
-  // await pool.query(
-  //   queryString2,
-  //   [projTitle, 1, tierOneAmount, tierOneRewards],
-  //   err => {
-  //     if (err) {
-  //       console.log("tier one bundle problem");
-  //     } else {
-  //       console.log("tier one bundle ok");
-  //     }
-  //   }
-  // );
-  // res.redirect("/projects");
 });
+
+router.get("/create-project-error", loggedIn, async (req,res) => {
+  res.render("create-project-error");
+});
+router.get("/projectexists-error", loggedIn, async (req, res) => {
+  res.render("projectexists-error");
+})
 
 router.get("/access-errorr", loggedIn, async (req, res, next) => {
   res.render("access-error");
@@ -1048,6 +1030,20 @@ async function checkIfUserLikesProject(username, projTitle) {
     if (results.rows == undefined) return false;
     return results.rows[0].username == username;
   } catch (e) {}
+}
+
+async function checkIfProjectTierExists(projTitle, fundTier) {
+  try {
+    var queryString =
+      "select * from projectbundles where projtitle = $1 and tier = $2";
+    const results = await pool.query(queryString, [
+      projTitle,
+      fundTier
+    ]);
+    // console.log(results.rows);
+    if (results.rows[0] == undefined) return false;
+    return results.rows[0].projtitle == projTitle;
+  } catch (e) { console.log(e); }
 }
 
 async function checkIfUserHasFundedTier(currentUser, projTitle, fundTier) {
