@@ -171,13 +171,73 @@ router.get("/profile/:username/following", loggedIn, async (req,res) => {
   const userinfo = await getUserInfo(req.params.username);
   const results = await getUserFollows(req.params.username);
 
-  console.log(results);
+  // console.log(results);
   
   res.render("followees", {followees: results, userinfo: userinfo });
 });
 
+router.get("/profile/:username/liked", loggedIn, async (req,res) => {
+  const userinfo = await getUserInfo(req.params.username);
+  const results = await getUserLikes(req.params.username);
+
+  // console.log(results);
+  
+  res.render("likedprojects", {likes: results, userinfo: userinfo });
+});
+
+router.get("/following/projects", loggedIn, async (req,res) => {
+  const userinfo = await getUserInfo(req.user[0].username);
+  const results = await getUserFollows(req.user[0].username);
+  const projArr = await getProjectsOfFollowing(req.user[0].username);
+  console.log(projArr);
+  // // console.log("user following : " + results);
+  // console.log("initial projArr is " + projArr);
+  // results.forEach(async (followedUser) => {
+  //   console.log(followedUser.followee);
+  //   const userProjects = await getProjectsByUser(followedUser.followee);
+  //   // console.log("projects = " + fetchProjects);
+  //   if (userProjects.length > 0) {
+  //     projArr.push(userProjects);
+  //   } 
+  //   console.log(projArr)
+  //   // userProjects.forEach((proj) => {
+  //   //   projArr.push(proj);
+  //   //   console.log(projArr);
+  //   // });
+  // });
+  // // console.log("projArr after all is " + projArr);
+  // await console.log(projArr + " is the final projArr");
+
+  res.render("followeeprojects", {projArr: projArr });
+});
+
 
 // user page functions
+async function getProjectsOfFollowing(username) {
+  try {
+    const projArr = [];
+    const following = await getUserFollows(username);
+    for(const followedUser of following) {
+      const userProjects = await getProjectsByUser(followedUser.followee);
+      for(const proj of userProjects) {
+        projArr.push(proj);
+        console.log("projArr is appended with " + proj.projtitle);
+      }
+    }
+    // following.forEach(async (followedUser) => {
+    //   const userProjects = await getProjectsByUser(followedUser.followee);
+    //   userProjects.forEach((proj) => {
+    //     projArr.push(proj.projtitle);
+    //     console.log("projArr is appended with " + proj.projtitle);
+    //   })
+    // })
+    console.log("projArr returned from function is: " + projArr);
+    return projArr;
+  } catch(e) {
+    return [];
+  }
+}
+
 async function readUsers() {
   try {
     const results = await pool.query("select * from users");
@@ -735,6 +795,16 @@ router.get("/projects/category/:type", loggedIn, async (req, res, next) => {
 // project page functions
 //
 //
+
+async function getProjectsByUser(username) {
+  try {
+    var queryString = "select projtitle from owns where username = '" + username + "'";
+    const results = await pool.query(queryString);
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
 
 async function getProjectsByCategory(type) {
   try {
