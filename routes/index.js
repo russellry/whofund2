@@ -79,6 +79,14 @@ router.get("/profile/:username", loggedIn, async (req, res) => {
   var currentUser = req.user[0].username;
   var toFollowUser = req.params.username;
   const isFollowing = await checkIfUserFollowing(currentUser, toFollowUser);
+  var loyalFundersFundeePair = await getLoyalFunders();
+  var fundee = [];
+  for (var i = 0; i < loyalFundersFundeePair.length; i++) {
+    if (req.params.username == loyalFundersFundeePair[i].follower) {
+      fundee.push(loyalFundersFundeePair[i].followee);
+    }
+  }
+  console.log(fundee);
 
   // console.log(req.user[0].username);
   res.render("profile", {
@@ -87,7 +95,8 @@ router.get("/profile/:username", loggedIn, async (req, res) => {
     following: following,
     followed: followed,
     currentuser: req.user[0].username,
-    isFollow: isFollowing
+    isFollow: isFollowing,
+    loyalFundees: fundee
   });
 });
 
@@ -248,6 +257,19 @@ async function readTrackRec() {
     const results = await pool.query(querys);
 
     console.log(results.rows);
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function getLoyalFunders() {
+  try {
+    // var queryString = "select * from users where username = '" + username + "'";
+    var queryString =
+      "WITH follower_five_years AS (SELECT DISTINCT follower,followee FROM   follows WHERE  Compare_time_day(current_timestamp :: timestamp, since) >= 1825), projectwithbundle AS (SELECT DISTINCT projtitle, username AS oname FROM   projectbundles NATURAL join owns) SELECT  * FROM    follower_five_years ffy WHERE   EXISTS(SELECT 1 FROM   owns WHERE  owns.username = ffy.followee)AND NOT EXISTS(SELECT 1 FROM   projectwithbundle pwb WHERE  pwb.oname = ffy.followee AND NOT EXISTS (SELECT 1 FROM   projectwithbundle pwb2 join fundings f2 ON   ( pwb2.projtitle = f2.projtitle ) WHERE  pwb2.projtitle = pwb.projtitle AND    pwb2.oname = ffy.followee AND    ffy.follower = f2.username))";
+    console.log(queryString);
+    const results = await pool.query(queryString);
     return results.rows;
   } catch (e) {
     return [];
