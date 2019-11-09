@@ -10,9 +10,15 @@
   </head>
   <body>
     <% include partials/base.ejs %>
-    <div class="container">
-      <form id="projectEditForm" action="/project/<%=projInfo[0].projtitle%>/edit" method="POST">
-
+    <div
+      class="container-fluid"
+      style="text-align: center; margin-top: 2%; margin-bottom: 5%;"
+    >
+      <form
+        id="projectEditForm"
+        action="/project/<%=projInfo[0].projtitle%>/edit"
+        method="POST"
+      >
         <div class="form-group">
           <label for="projectDesc">Description</label>
           <input
@@ -26,13 +32,14 @@
         </div>
         <div class="form-group">
           <label for="projectCategory">Category</label>
-          <select 
+          <select
             type="text"
             class="form-control"
             name="projectCategory"
             aria-describedby="projectCategory"
             placeholder="Select category.."
-            required>
+            required
+          >
             <option value="Art">Art</option>
             <option value="Comics">Comics</option>
             <option value="Crafts">Crafts</option>

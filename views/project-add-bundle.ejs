@@ -10,8 +10,15 @@
   </head>
   <body>
     <% include partials/base.ejs %>
-    <div class="container">
-      <form id="bundleTierForm" action="/project/<%=projInfo[0].projtitle%>/add-bundle" method="POST">
+    <div
+      class="container-fluid"
+      style="text-align: center; margin-top: 2%; margin-bottom: 5%;"
+    >
+      <form
+        id="bundleTierForm"
+        action="/project/<%=projInfo[0].projtitle%>/add-bundle"
+        method="POST"
+      >
         <div class="form-group">
           <label for="bundleTierNumber">Bundle Tier Number</label>
           <input
@@ -51,7 +58,7 @@
             required
           />
         </div>
-        
+
         <button type="submit" class="btn btn-primary">Add Bundle</button>
       </form>
     </div>
