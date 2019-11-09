@@ -78,6 +78,7 @@ router.get("/profile/:username", loggedIn, async (req, res) => {
 
   var currentUser = req.user[0].username;
   var toFollowUser = req.params.username;
+  const projects = await getProjectsByUser(req.params.username);
   const isFollowing = await checkIfUserFollowing(currentUser, toFollowUser);
   var loyalFundersFundeePair = await getLoyalFunders();
   var fundee = [];
@@ -96,6 +97,7 @@ router.get("/profile/:username", loggedIn, async (req, res) => {
     followed: followed,
     currentuser: req.user[0].username,
     isFollow: isFollowing,
+    projects: projects,
     loyalFundees: fundee
   });
 });
