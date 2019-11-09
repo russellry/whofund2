@@ -17,8 +17,7 @@ module.exports = function(passport) {
     var hashedPassword = await crypto
       .createHash("sha256")
       .update(body.password)
-      .digest("hex")
-      .toUpperCase();
+      .digest("hex");
     console.log("hashed pw = " + hashedPassword);
     var queryString =
       "INSERT INTO users (username, password, joineddate) VALUES(";
