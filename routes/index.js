@@ -1261,11 +1261,13 @@ async function getFundedTiersOfProjectByUser(projTitle, currUser) {
 async function deleteProject(projTitle) {
   try {
     var queryString = "delete from owns where projtitle = $1";
+    var queryString1 = "delete from fundings where projtitle = $1";
     var queryString2 = "delete from likes where projtitle = $1";
     var queryString3 = "delete from taggedwith where projtitle = $1";
     var queryString4 = "delete from projects where projtitle = $1";
-
+    
     await pool.query(queryString, [projTitle]);
+    await pool.query(queryString1, [projTitle]);
     await pool.query(queryString2, [projTitle]);
     await pool.query(queryString3, [projTitle]);
     await pool.query(queryString4, [projTitle]);
