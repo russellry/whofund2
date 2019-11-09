@@ -155,10 +155,31 @@
                   </li>
     
                 </br>
-                  <h3>Funding rewards:</h3>
+                  
+                </ul>
+                <% } %>
+              </div>
+              </div>
+              <div class="row justify-content-center" >
+                <h3>Funding rewards:</h3>
+              </div>
+
+              <div class="row">
                   <% bundles.forEach((item) => { %>
-                    <p>Tier <%= item.tier%> Amount: $<%=item.amount%></p>
-                    <p>Rewards: <%=item.description%></p>
+                    <div class="col-4">
+                        <div class="card">
+                            <div class="card-body">
+                              <h6 class="card-title">
+                                  <p>Tier <%= item.tier%> Amount: $<%=item.amount%></p>
+
+                                </h6>
+                                <p class="card-text">
+                                    <small class="text-muted"
+                                      >                    Rewards: <%=item.description%>
+
+                                      </small
+                                    >
+                                  </p>
                     <% if(!targetHit && owner[0].username != currUser && !tierFunding.includes(item.tier) && !pastDeadline) { %>
                     <button class="btn btn-primary" type="button">
                       <a
@@ -176,11 +197,10 @@
                         >
                       </button>
                     <%}; %>
-                    </br></br></br>
+                  </div>
+                </div>
+                  </div>
                   <% }); %>
-                </ul>
-                <% } %>
-              </div>
               </div>
 
             <br />
@@ -213,6 +233,7 @@
           <div class="col-5">
               <h3>This project has been funded by:</h3>
                   <ul class="list-group">
+                    <div class="col-6 offset-3">
                     <% var index = 1%> <% projFunders.forEach((item) => { %>
 
                     <li
@@ -220,7 +241,7 @@
                     >
                       <a href="/profile/<%=item.username%>"><%=item.username %></a>
                     </li>
-                    <% }); %>
+                    <% }); %></div>
                   </ul>
           </div>
         </div>
