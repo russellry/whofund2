@@ -371,7 +371,7 @@ router.get("/my-projects", loggedIn, async (req, res) => {
   var currentUser = req.user[0].username;
 
   const rows = await readMyProjects(currentUser);
-  res.render("projects", { projInfo: rows });
+  res.render("myprojects", { projInfo: rows });
 });
 
 router.get("/project/:projtitle", loggedIn, async (req, res) => {
