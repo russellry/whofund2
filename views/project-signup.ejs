@@ -34,31 +34,89 @@
             required
           />
         </div>
-        <div class="form-group">
-          <label for="projectCategory">Category</label>
-          <select 
-            type="text"
-            class="form-control"
-            name="projectCategory"
-            aria-describedby="projectCategory"
-            placeholder="Select category.."
-            required>
-            <option value="Art">Art</option>
-            <option value="Comics">Comics</option>
-            <option value="Crafts">Crafts</option>
-            <option value="Dance">Dance</option>
-            <option value="Design">Design</option>
-            <option value="Fashion">Fashion</option>
-            <option value="Film & Video">Film & Video</option>
-            <option value="Food">Food</option>
-            <option value="Games">Games</option>
-            <option value="Journalism">Journalism</option>
-            <option value="Music">Music</option>
-            <option value="Photography">Photography</option>
-            <option value="Publishing">Publishing</option>
-            <option value="Technology">Technology</option>
-            <option value="Theater">Theater</option>
-          </select>
+        <div class="form-group" id="category">
+          <label for="projectCategory">Category (Select 1 or more)</label>
+
+          <div class="container">
+          <div class="row" style="justify-content: space-evenly;">
+            <input type="checkbox" id="Art" name="categories" value="Art" />
+            <label for="Art">Art</label>
+            <input
+              type="checkbox"
+              id="Comics"
+              name="categories"
+              value="Comics"
+            />
+            <label for="Comics">Comics</label>
+            <input
+              type="checkbox"
+              id="Crafts"
+              name="categories"
+              value="Crafts"
+            />
+            <label for="Crafts">Crafts</label>
+            <input type="checkbox" id="Dance" name="categories" value="Dance" />
+            <label for="comics">Dance</label>
+            <input
+              type="checkbox"
+              id="Design"
+              name="categories"
+              value="Design"
+            />
+            <label for="Design">Design</label>
+            <input
+              type="checkbox"
+              id="Fashion"
+              name="categories"
+              value="Fashion"
+            />
+            <label for="Fashion">Fashion</label>
+            <input type="checkbox" id="Film" name="categories" value="Film" />
+            <label for="Film">Film</label>
+            <input type="checkbox" id="Food" name="categories" value="Food" />
+            <label for="Food">Food</label>
+            <input type="checkbox" id="Games" name="categories" value="Games" />
+            <label for="Games">Games</label>
+          </div>
+          <div class="row"style="justify-content: space-evenly;">
+            <input
+              type="checkbox"
+              id="Journalism"
+              name="categories"
+              value="Journalism"
+            />
+            <label for="Journalism">Journalism</label>
+            <input type="checkbox" id="Music" name="categories" value="Music" />
+            <label for="Music">Music</label>
+            <input
+              type="checkbox"
+              id="Photography"
+              name="categories"
+              value="Photography"
+            />
+            <label for="Photography">Photography</label>
+            <input
+              type="checkbox"
+              id="Publishing"
+              name="categories"
+              value="Publishing"
+            />
+            <label for="Publishing">Publishing</label>
+            <input
+              type="checkbox"
+              id="Technology"
+              name="categories"
+              value="Technology"
+            />
+            <label for="Technology">Technology</label>
+            <input
+              type="checkbox"
+              id="Theater"
+              name="categories"
+              value="Theater"
+            />
+            <label for="Theater">Theater</label>
+          </div>
         </div>
         <div class="form-group">
           <label for="projectTargetAmt">Target Amount</label>
@@ -109,7 +167,9 @@
             required
           />
         </div>
-        <button type="submit" class="btn btn-primary">Create Project</button>
+        <button type="submit" class="btn btn-primary">
+          Create Project
+        </button>
       </form>
     </div>
   </body>
