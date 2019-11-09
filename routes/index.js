@@ -5,8 +5,8 @@ var api = require("../api");
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
-  // connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
+  // connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
+  connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
 });
 
 // static files
@@ -83,8 +83,8 @@ router.get("/profile/:username", loggedIn, async (req, res) => {
   var loyalFundersFundeePair = await getLoyalFunders();
   var fundee = [];
   for (var i = 0; i < loyalFundersFundeePair.length; i++) {
-    if (req.params.username == loyalFundersFundeePair[i].follower) {
-      fundee.push(loyalFundersFundeePair[i].followee);
+    if (req.params.username == loyalFundersFundeePair[i].followee) {
+      fundee.push(loyalFundersFundeePair[i].follower);
     }
   }
   console.log(fundee);
@@ -206,6 +206,7 @@ router.get("/following/projects", loggedIn, async (req, res) => {
   const userinfo = await getUserInfo(req.user[0].username);
   const results = await getUserFollows(req.user[0].username);
   const projArr = await getProjectsOfFollowing(req.user[0].username);
+
   console.log(projArr);
   // // console.log("user following : " + results);
   // console.log("initial projArr is " + projArr);
@@ -254,7 +255,7 @@ async function readKeyboardWarriors() {
 async function readTrackRec() {
   try {
     querys =
-      "WITH project_total_amount AS ( SELECT   projtitle, sum(amount) AS totalamount FROM     fundings NATURAL JOIN projectbundles GROUP BY projtitle) SELECT owns.username  FROM   owns NATURAL join projects NATURAL join project_total_amount  WHERE  projects.targetamount <= project_total_amount.totalamount INTERSECT SELECT DISTINCT o1.username FROM   owns o1 WHERE  NOT EXISTS (SELECT 1 FROM   owns o2 NATURAL join projectupdates pu WHERE  o2.username = o1.username AND NOT EXISTS (SELECT 1 FROM   projectupdates pu2 WHERE  pu2.projtitle = pu.projtitle GROUP  BY pu2.projtitle HAVING Count(*) >= 2)) INTERSECT SELECT DISTINCT o1.username FROM   owns o1 WHERE  NOT EXISTS (SELECT 1 FROM   owns o2 NATURAL join projectupdates pu WHERE  o2.username = o1.username AND NOT EXISTS (SELECT 1 FROM   projectupdates pu2 WHERE  pu2.projtitle = pu.projtitle AND Compare_time_day( current_timestamp::timestamp, pu2.updatetime) <= 90))";
+      "WITH project_total_amount AS (SELECT   projtitle, sum(amount) AS totalamount FROM     fundings NATURAL JOIN projectbundles GROUP BY projtitle ) SELECT owns.username FROM   owns NATURAL join projects NATURAL join project_total_amount WHERE  projects.targetamount <= project_total_amount.totalamount INTERSECT SELECT DISTINCT o1.username FROM   owns o1 WHERE  NOT EXISTS (SELECT 1 FROM   owns o2 WHERE  o2.username = o1.username AND NOT EXISTS (SELECT 1 FROM   projectupdates pu2 WHERE  o2.projtitle = pu2.projtitle GROUP  BY pu2.projtitle HAVING Count(*) >= 2)) INTERSECT SELECT DISTINCT o1.username FROM   owns o1 WHERE  NOT EXISTS (SELECT 1  FROM   owns o2 WHERE  o2.username = o1.username AND NOT EXISTS (SELECT 1 FROM   projectupdates pu2 WHERE  o2.projtitle = pu2.projtitle AND Compare_time_day(current_timestamp::timestamp, pu2.updatetime) <= 90))";
     console.log(querys);
     const results = await pool.query(querys);
 
@@ -340,6 +341,7 @@ async function getProjectsOfFollowing(username) {
   try {
     const projArr = [];
     const following = await getUserFollows(username);
+    console.log(following);
     for (const followedUser of following) {
       const userProjects = await getProjectsByUser(followedUser.followee);
       for (const proj of userProjects) {
@@ -361,6 +363,7 @@ router.get("/project/new", loggedIn, (req, res) =>
 
 router.get("/projects", loggedIn, async (req, res) => {
   const rows = await readProjects();
+
   res.render("projects", { projInfo: rows });
 });
 
@@ -592,7 +595,7 @@ router.post("/project-update", loggedIn, async (req, res, next) => {
   curr_url = req.headers.referer;
   splitstr = curr_url.split("/");
   projTitle = splitstr[splitstr.length - 1];
-  projTitle = projTitle.replace("%20", " ");
+  projTitle = projTitle.replace(/%20/g, " ");
 
   var update = req.body.updates;
   var updateDateCreated = api.getDateNow();
@@ -986,8 +989,7 @@ router.get("/projects/category/:type", loggedIn, async (req, res, next) => {
 
 async function getProjectsByUser(username) {
   try {
-    var queryString =
-      "select projtitle from owns where username = '" + username + "'";
+    var queryString = "select * from owns where username = '" + username + "'";
     const results = await pool.query(queryString);
     return results.rows;
   } catch (e) {
@@ -1031,7 +1033,9 @@ async function checkIfBundleExists(projTitle, bundleTierNumber) {
 
 async function readProjects() {
   try {
-    const results = await pool.query("select * from projects");
+    const results = await pool.query(
+      "select * from projects natural join owns"
+    );
     return results.rows;
   } catch (e) {
     return [];
@@ -1267,7 +1271,7 @@ async function deleteProject(projTitle) {
     var queryString2 = "delete from likes where projtitle = $1";
     var queryString3 = "delete from taggedwith where projtitle = $1";
     var queryString4 = "delete from projects where projtitle = $1";
-    
+
     await pool.query(queryString, [projTitle]);
     await pool.query(queryString1, [projTitle]);
     await pool.query(queryString2, [projTitle]);
