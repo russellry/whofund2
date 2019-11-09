@@ -80,9 +80,10 @@
             </li>
             <li class="list-group-item">
               <h4>Loyal Funders</h4>
-              <% loyalFundees.forEach((item)=> { %>
+              <% if (loyalFundees.length > 0) { %> <%
+              loyalFundees.forEach((item)=> { %>
               <a href="/profile/<%=item%>"><%=item %></a>
-              <%})%>
+              <%})%> <% } else { %> -Nil- <% } %>
             </li>
           </ul>
         </div>

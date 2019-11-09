@@ -5,8 +5,8 @@ var api = require("../api");
 const { Pool } = require("pg");
 
 const pool = new Pool({
-  connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
-  // connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
+  // connectionString: "postgres://postgres:cs2102haha@localhost:5433/postgres"
+  connectionString: "postgres://postgres:Pokemon2424!!@localhost:5432/whofund"
 });
 
 // static files
@@ -82,8 +82,8 @@ router.get("/profile/:username", loggedIn, async (req, res) => {
   var loyalFundersFundeePair = await getLoyalFunders();
   var fundee = [];
   for (var i = 0; i < loyalFundersFundeePair.length; i++) {
-    if (req.params.username == loyalFundersFundeePair[i].follower) {
-      fundee.push(loyalFundersFundeePair[i].followee);
+    if (req.params.username == loyalFundersFundeePair[i].followee) {
+      fundee.push(loyalFundersFundeePair[i].follower);
     }
   }
   console.log(fundee);
@@ -252,7 +252,7 @@ async function readKeyboardWarriors() {
 async function readTrackRec() {
   try {
     querys =
-      "WITH project_total_amount AS ( SELECT   projtitle, sum(amount) AS totalamount FROM     fundings NATURAL JOIN projectbundles GROUP BY projtitle) SELECT owns.username  FROM   owns NATURAL join projects NATURAL join project_total_amount  WHERE  projects.targetamount <= project_total_amount.totalamount INTERSECT SELECT DISTINCT o1.username FROM   owns o1 WHERE  NOT EXISTS (SELECT 1 FROM   owns o2 NATURAL join projectupdates pu WHERE  o2.username = o1.username AND NOT EXISTS (SELECT 1 FROM   projectupdates pu2 WHERE  pu2.projtitle = pu.projtitle GROUP  BY pu2.projtitle HAVING Count(*) >= 2)) INTERSECT SELECT DISTINCT o1.username FROM   owns o1 WHERE  NOT EXISTS (SELECT 1 FROM   owns o2 NATURAL join projectupdates pu WHERE  o2.username = o1.username AND NOT EXISTS (SELECT 1 FROM   projectupdates pu2 WHERE  pu2.projtitle = pu.projtitle AND Compare_time_day( current_timestamp::timestamp, pu2.updatetime) <= 90))";
+      "WITH project_total_amount AS (SELECT   projtitle, sum(amount) AS totalamount FROM     fundings NATURAL JOIN projectbundles GROUP BY projtitle ) SELECT owns.username FROM   owns NATURAL join projects NATURAL join project_total_amount WHERE  projects.targetamount <= project_total_amount.totalamount INTERSECT SELECT DISTINCT o1.username FROM   owns o1 WHERE  NOT EXISTS (SELECT 1 FROM   owns o2 WHERE  o2.username = o1.username AND NOT EXISTS (SELECT 1 FROM   projectupdates pu2 WHERE  o2.projtitle = pu2.projtitle GROUP  BY pu2.projtitle HAVING Count(*) >= 2)) INTERSECT SELECT DISTINCT o1.username FROM   owns o1 WHERE  NOT EXISTS (SELECT 1  FROM   owns o2 WHERE  o2.username = o1.username AND NOT EXISTS (SELECT 1 FROM   projectupdates pu2 WHERE  o2.projtitle = pu2.projtitle AND Compare_time_day(current_timestamp::timestamp, pu2.updatetime) <= 90))";
     console.log(querys);
     const results = await pool.query(querys);
 
@@ -590,7 +590,7 @@ router.post("/project-update", loggedIn, async (req, res, next) => {
   curr_url = req.headers.referer;
   splitstr = curr_url.split("/");
   projTitle = splitstr[splitstr.length - 1];
-  projTitle = projTitle.replace("%20", " ");
+  projTitle = projTitle.replace(/%20/g, " ");
 
   var update = req.body.updates;
   var updateDateCreated = api.getDateNow();
@@ -1265,7 +1265,7 @@ async function deleteProject(projTitle) {
     var queryString2 = "delete from likes where projtitle = $1";
     var queryString3 = "delete from taggedwith where projtitle = $1";
     var queryString4 = "delete from projects where projtitle = $1";
-    
+
     await pool.query(queryString, [projTitle]);
     await pool.query(queryString1, [projTitle]);
     await pool.query(queryString2, [projTitle]);
