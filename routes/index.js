@@ -206,6 +206,7 @@ router.get("/following/projects", loggedIn, async (req, res) => {
   const userinfo = await getUserInfo(req.user[0].username);
   const results = await getUserFollows(req.user[0].username);
   const projArr = await getProjectsOfFollowing(req.user[0].username);
+
   console.log(projArr);
   // // console.log("user following : " + results);
   // console.log("initial projArr is " + projArr);
@@ -340,6 +341,7 @@ async function getProjectsOfFollowing(username) {
   try {
     const projArr = [];
     const following = await getUserFollows(username);
+    console.log(following);
     for (const followedUser of following) {
       const userProjects = await getProjectsByUser(followedUser.followee);
       for (const proj of userProjects) {
@@ -987,8 +989,7 @@ router.get("/projects/category/:type", loggedIn, async (req, res, next) => {
 
 async function getProjectsByUser(username) {
   try {
-    var queryString =
-      "select projtitle from owns where username = '" + username + "'";
+    var queryString = "select * from owns where username = '" + username + "'";
     const results = await pool.query(queryString);
     return results.rows;
   } catch (e) {

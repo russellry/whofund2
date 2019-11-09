@@ -86,15 +86,14 @@
               <%})%> <% } else { %> -Nil- <% } %>
             </li>
           </ul>
-          <br>
+          <br />
           <h4><%=userinfo[0].username%>'s projects</h4>
           <ul class="list-group">
             <% projects.forEach((proj) => { %>
-              <li class="list-group-item">
-                <a href="/project/<%=proj.projtitle%>"><%=proj.projtitle%></a>
-              </li>
+            <li class="list-group-item">
+              <a href="/project/<%=proj.projtitle%>"><%=proj.projtitle%></a>
+            </li>
             <% }) %>
-            
           </ul>
         </div>
 
