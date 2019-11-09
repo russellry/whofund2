@@ -361,6 +361,7 @@ router.get("/project/new", loggedIn, (req, res) =>
 
 router.get("/projects", loggedIn, async (req, res) => {
   const rows = await readProjects();
+
   res.render("projects", { projInfo: rows });
 });
 
@@ -1031,7 +1032,9 @@ async function checkIfBundleExists(projTitle, bundleTierNumber) {
 
 async function readProjects() {
   try {
-    const results = await pool.query("select * from projects");
+    const results = await pool.query(
+      "select * from projects natural join owns"
+    );
     return results.rows;
   } catch (e) {
     return [];
