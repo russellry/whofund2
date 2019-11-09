@@ -58,9 +58,15 @@ router.get("/logout", loggedIn, function(req, res, next) {
 
 // get all users
 router.get("/users", loggedIn, async (req, res) => {
+  //TODO:
   const rows = await readUsers();
   const topKeyboardWarriors = await readKeyboardWarriors();
-  res.render("users", { data: rows, kb: topKeyboardWarriors });
+  const greatTrackRecord = await readTrackRec();
+  res.render("users", {
+    data: rows,
+    kb: topKeyboardWarriors,
+    tr: greatTrackRecord
+  });
 });
 
 // get specific user profile
@@ -227,6 +233,20 @@ async function readKeyboardWarriors() {
     const results = await pool.query(
       "select username, count(*) from ProjectFeedbacks pfb where ( select count(*) from  ProjectFeedbacks pfb2 where  pfb2.userName = pfb.userName and length(pfb2.description) >= 20) >= 2 group by userName ORDER BY count(*) DESC limit 3;"
     );
+    console.log(results.rows);
+    return results.rows;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function readTrackRec() {
+  try {
+    querys =
+      "WITH project_total_amount AS ( SELECT   projtitle, sum(amount) AS totalamount FROM     fundings NATURAL JOIN projectbundles GROUP BY projtitle) SELECT owns.username  FROM   owns NATURAL join projects NATURAL join project_total_amount  WHERE  projects.targetamount <= project_total_amount.totalamount INTERSECT SELECT DISTINCT o1.username FROM   owns o1 WHERE  NOT EXISTS (SELECT 1 FROM   owns o2 NATURAL join projectupdates pu WHERE  o2.username = o1.username AND NOT EXISTS (SELECT 1 FROM   projectupdates pu2 WHERE  pu2.projtitle = pu.projtitle GROUP  BY pu2.projtitle HAVING Count(*) >= 2)) INTERSECT SELECT DISTINCT o1.username FROM   owns o1 WHERE  NOT EXISTS (SELECT 1 FROM   owns o2 NATURAL join projectupdates pu WHERE  o2.username = o1.username AND NOT EXISTS (SELECT 1 FROM   projectupdates pu2 WHERE  pu2.projtitle = pu.projtitle AND Compare_time_day( current_timestamp::timestamp, pu2.updatetime) <= 90))";
+    console.log(querys);
+    const results = await pool.query(querys);
+
     console.log(results.rows);
     return results.rows;
   } catch (e) {
